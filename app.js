@@ -184,7 +184,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
     for(var k=0;k<needs.length;k++)widths.push(needs[k]+spare);
     // Si la línea está muy llena, conservamos el tamaño de la fuente;
     // el renderizador añade otro renglón visual más abajo.
-    var splitVisual=(previewMode?previewWidths(l,18,measure).total:total)>avail&&l.bars.length>2;
+    var splitVisual=(previewMode?previewWidths(l,18,document.createElement('canvas').getContext('2d')).total:total)>avail&&l.bars.length>2;
     // Organizar los compases en una o dos filas visuales si la tipografía
     // no cabe; nunca cortamos ni comprimimos acordes individualmente.
     var groups=[];
@@ -298,7 +298,7 @@ function fitPaper(){
   // La hoja se ajusta completa al ancho y alto disponibles.
   var vw=window.innerWidth||document.documentElement.clientWidth;
   var vh=window.innerHeight||document.documentElement.clientHeight;
-  factor=Math.min(1,Math.max(0.1,(vw-24)/780),Math.max(0.1,(vh-24)/1103));
+  factor=Math.min(1,Math.max(0.1,(vw-24)/780),Math.max(0.1,(vh-90)/1103));
  }else{factor=zoom?1:Math.min(1,w/780);}
  var stage=$('page-scaler');
  stage.style.width=(780*factor)+'px';stage.style.height=(1103*factor)+'px';
