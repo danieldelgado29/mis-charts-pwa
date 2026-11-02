@@ -1,7 +1,7 @@
 /* Mis Charts 1.7 — JavaScript ES5 compatible con Safari antiguo.
    No librerías, servidores, micrófono ni reconocimiento de escritura. */
 (function(){'use strict';
-var KEY='mis-charts-buttons-v1.7', charts=[], chart=null, sec=0, line=0, bar=0, beat=0, half=0, zoom=false, previewMode=false, previewPreviousZoom=false;
+var KEY='mis-charts-buttons-v1.7', charts=[], chart=null, sec=0, line=0, bar=0, beat=0, half=0, zoom=false, previewMode=false, previewPreviousZoom=false, previewFont=18, previewAuto=true, previewGap=1;
 var mode='', clipboard=null, builder=null, undoStack=[], noteDuration='♩', noteAcc='', toastTimer=null, lastPreview='';
 var chartHistory=[],staffHistory=[],chosenDuration='quarter',chosenAcc='',dragDuration='',lastTapTime=0,lastTapKey='',tapWindow=430;
 var TYPES=['m','Maj7','7','m7b5','m7','sus2','sus4','dim7','aug7','alt'];
@@ -99,16 +99,75 @@ function repeatBarline(which){
  return el;
 }
 function barVolta(b){var n=Number(b.volta||0);return n===1||n===2?n:0;}
-function renderChart(){if(!chart)return;
+// Ajuste tipográfico exclusivo de Preview. Conserva la estructura de compases.
+function previewWidths(l,size,ctx){
+ ctx.font='800 '+size+'px Arial, sans-serif';
+ var list=[],sum=0;
+ for(var b=0;b<l.bars.length;b++){
+  var pk=rhythmCells(l.bars[b]),need=0;
+  for(var i=0;i<pk.cells.length;i++)need+=rhythmCellWidth(pk.cells[i],ctx);
+  var w=pk.empty?65:pk.solo?Math.max(76,widthForChord(pk.soloLabel,ctx)+17):Math.max(96,need+10);
+  list.push(w);sum+=w;
+ }
+ return {widths:list,total:sum};
+}
+function previewStats(size){
+ var ctx=document.createElement('canvas').getContext('2d'),height=0,lines=0,limit=602;
+ for(var si=0;si<chart.sections.length;si++)for(var li=0;li<chart.sections[si].lines.length;li++){
+  var l=chart.sections[si].lines[li],base=previewWidths(l,18,ctx),trial=previewWidths(l,size,ctx);
+  var split=base.total>limit&&l.bars.length>2,mid=split?Math.ceil(l.bars.length/2):l.bars.length;
+  var sums=[0,0],volta=[false,false],staff=[false,false];
+  for(var k=0;k<l.bars.length;k++){
+   var ix=k<mid?0:1;
+   sums[ix]+=trial.widths[k];
+   if(barVolta(l.bars[k]))volta[ix]=true;
+   if(l.bars[k].staff)staff[ix]=true;
+  }
+  if(sums[0]>limit-6||sums[1]>limit-6)return null;
+  var barH=Math.max(36,Math.ceil(size*1.38));
+  height+=barH+6+(volta[0]?30:0)+(staff[0]?58:0);
+  if(split)height+=barH+6+(volta[1]?30:0)+(staff[1]?58:0);
+  lines++;
+ }
+ return {height:height,lines:lines};
+}
+function previewMaxFont(){
+ if(!chart)return 18;
+ for(var sz=74;sz>=20;sz-=2){
+  var stats=previewStats(sz);
+  if(stats&&stats.height+stats.lines*5<850)return sz;
+ }
+ return 18;
+}
+function layoutPreview(){
+ if(!previewMode)return;
+ var max=previewMaxFont();
+ if(previewAuto)previewFont=max;else previewFont=Math.max(18,Math.min(max,previewFont));
+ var stats=previewStats(previewFont);
+ previewGap=stats?Math.min(30,Math.max(1,Math.floor((835-stats.height)/Math.max(1,stats.lines+1)))):1;
+ $('preview-auto').className=previewAuto?'selected':'';
+ $('preview-smaller').disabled=previewFont<=18;
+ $('preview-larger').disabled=previewFont>=max;
+ $('paper').style.setProperty('--show-chord-size',previewFont+'px');
+ $('paper').style.setProperty('--show-section-size',Math.min(18,Math.max(13,previewFont*.32))+'px');
+ $('paper').style.setProperty('--show-title-size',Math.min(48,Math.max(30,previewFont*.75))+'px');
+}
+function changePreview(delta){
+ if(!previewMode)return;
+ var max=previewMaxFont(),next=Math.min(max,Math.max(18,previewFont+delta));
+ if(next===previewFont){say(delta>0?'Máximo tamaño que cabe en esta hoja':'Mínimo tamaño');return;}
+ previewAuto=false;previewFont=next;renderChart();
+}
+function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
  $('paper-title').textContent=chart.title;$('paper-artist').textContent=chart.artist||' ';$('paper-meter').textContent=chart.meter;
  $('line-info').textContent=currentSection().name+' · línea '+(line+1)+' · '+currentLine().bars.length+' compases · x'+currentLine().repeat;
  var body=$('paper-body');body.innerHTML='';
- var measure=document.createElement('canvas').getContext('2d');measure.font='800 18px Arial, sans-serif';
+ var measure=document.createElement('canvas').getContext('2d');measure.font='800 '+(previewMode?previewFont:18)+'px Arial, sans-serif';
  for(var si=0;si<chart.sections.length;si++){
   var section=chart.sections[si];
   for(var li=0;li<section.lines.length;li++){
    (function(si,li,s,l){
-    var wr=document.createElement('div');wr.className='line-wrapper';
+    var wr=document.createElement('div');wr.className='line-wrapper';if(previewMode)wr.style.marginBottom=previewGap+'px';
     // Cada línea de datos puede contener una o dos filas de visualización.
     var packs=[],needs=[],total=0;
     for(var bi=0;bi<l.bars.length;bi++){
@@ -125,7 +184,7 @@ function renderChart(){if(!chart)return;
     for(var k=0;k<needs.length;k++)widths.push(needs[k]+spare);
     // Si la línea está muy llena, conservamos el tamaño de la fuente;
     // el renderizador añade otro renglón visual más abajo.
-    var splitVisual=total>avail&&l.bars.length>2;
+    var splitVisual=(previewMode?previewWidths(l,18,measure).total:total)>avail&&l.bars.length>2;
     // Organizar los compases en una o dos filas visuales si la tipografía
     // no cabe; nunca cortamos ni comprimimos acordes individualmente.
     var groups=[];
@@ -140,13 +199,14 @@ function renderChart(){if(!chart)return;
      var visualLine=document.createElement('div');visualLine.className='chart-line';
      var hasVolta=false;
      for(var ei=gg.from;ei<gg.to;ei++){if(barVolta(l.bars[ei]))hasVolta=true;}
-     visualLine.style.height=hasVolta?'66px':'36px';
-     if(hasVolta)visualLine.style.paddingTop='30px';
+     var showBarH=previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30;
+      visualLine.style.height=(showBarH+6+(hasVolta?30:0))+'px';
+      if(hasVolta)visualLine.style.paddingTop='30px';
      var label=document.createElement('div');label.className='section-label';
      label.textContent=(li===0&&gi===0)?s.name:'';
      label.title='Seleccionar sección';
      label.onclick=function(e){e.stopPropagation();handleSectionTap(si,li);};visualLine.appendChild(label);
-     var bs=document.createElement('div');bs.className='bars-line';bs.style.height='30px';
+     var bs=document.createElement('div');bs.className='bars-line';bs.style.height=showBarH+'px';
      for(var bidx=gg.from;bidx<gg.to;bidx++)(function(bi){
       var b=l.bars[bi],pack=packs[bi],bt=document.createElement('div');
       bt.className='bar-item'+(si===sec&&li===line&&bi===bar?' selected':'');
@@ -155,7 +215,7 @@ function renderChart(){if(!chart)return;
       if(bi>0&&l.bars[bi-1].repeatEnd)bt.className+=' after-repeat-end';
       var w=(needs[bi]+Math.max(0,room));
       // Si los compases no caben, no hacer reducciones de letra ocultas.
-      bt.style.cssText='height:30px;flex:0 0 '+w.toFixed(2)+'px;width:'+w.toFixed(2)+'px;';
+      bt.style.cssText='height:'+showBarH+'px;flex:0 0 '+w.toFixed(2)+'px;width:'+w.toFixed(2)+'px;';
       bt.setAttribute('data-index',bi);bt.setAttribute('data-sec',si);bt.setAttribute('data-line',li);bt.setAttribute('role','button');bt.setAttribute('tabindex','0');bt.setAttribute('aria-label','Compás '+(bi+1)+'. Un toque selecciona, dos editan.');
       // Solo Segno/Coda siguen siendo signos sobre el compás.
       // Las repeticiones reemplazan físicamente la barra de límite.
@@ -172,7 +232,7 @@ function renderChart(){if(!chart)return;
         var c=pack.cells[ci],tok=document.createElement('span');
         tok.className='chord-token beat-chord'+(c.label==='/'?' empty':'');
         tok.textContent=c.label||'\u00A0';tok.title=(c.label||'Pulso sin nuevo acorde');
-        tok.style.display='flex';tok.style.fontSize='18px';
+        tok.style.display='flex';tok.style.fontSize=(previewMode?previewFont:18)+'px';
         tok.style.flex=String(rhythmCellWidth(c,measure))+' '+String(rhythmCellWidth(c,measure))+' 0';
         flow.appendChild(tok);
        }
@@ -219,15 +279,18 @@ function setPreviewMode(enabled){
  if(!chart)return;
  previewMode=!!enabled;
  if(previewMode){
-  previewPreviousZoom=zoom;zoom=false;
+  previewPreviousZoom=zoom;zoom=false;previewAuto=true;
   $('chart-screen').className='screen screen-light preview-mode';
-  $('preview-close').className='preview-close';
+  $('preview-close').className='preview-close';$('preview-controls').className='preview-controls';
  }else{
   zoom=previewPreviousZoom;
   $('chart-screen').className='screen screen-light';
-  $('preview-close').className='preview-close hide';
+  $('preview-close').className='preview-close hide';$('preview-controls').className='preview-controls hide';
+  $('paper').style.removeProperty('--show-chord-size');
+  $('paper').style.removeProperty('--show-section-size');
+  $('paper').style.removeProperty('--show-title-size');
  }
- fitPaper();
+ renderChart();
 }
 function fitPaper(){
  var sc=$('paper-scroll'),w=sc.clientWidth-16,factor;
@@ -537,6 +600,9 @@ $('repeat-plus').onclick=function(){pushChartHistory();currentLine().repeat=Math
 $('zoom-button').onclick=function(){zoom=!zoom;this.textContent=zoom?'Ajustar A4':'Ampliar lectura';fitPaper();};
 $('preview-button').onclick=function(){setPreviewMode(true);};
 $('preview-close').onclick=function(){setPreviewMode(false);};
+$('preview-smaller').onclick=function(){changePreview(-4);};
+$('preview-larger').onclick=function(){changePreview(4);};
+$('preview-auto').onclick=function(){previewAuto=true;renderChart();};
 document.addEventListener('keydown',function(e){if(previewMode&&e.key==='Escape')setPreviewMode(false);});
 $('copy-bar').onclick=copySelectedBar;$('copy-section').onclick=copySelectedSection;$('paste-clipboard').onclick=pasteSelected;$('cancel-copy').onclick=function(){clipboard=null;mode='';lastTapKey='';updateClipboardUI();say('Copia cancelada');};
 $('editor-back').onclick=$('editor-done').onclick=function(){save();show('chart-screen');renderChart();};
@@ -561,6 +627,6 @@ $('volta-clear').onclick=function(){setVolta(0);};
 $('import-button').onclick=function(){$('import-file').click();};$('import-file').onchange=function(e){var f=this.files&&this.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(){saveImportText(reader.result);};reader.readAsText(f);this.value='';};window.addEventListener('resize',function(){if(chart&&$('chart-screen').className.indexOf('hide')===-1)fitPaper();});
 }
 function ensureData(){for(var c=0;c<charts.length;c++){var ob=charts[c];if(!ob.sections)ob.sections=[];for(var s=0;s<ob.sections.length;s++){var section=ob.sections[s];if(!section.lines)section.lines=[];for(var l=0;l<section.lines.length;l++){var ln=section.lines[l];if(!ln.bars)ln.bars=[];if(!ln.repeat)ln.repeat=1;for(var b=0;b<ln.bars.length;b++){var br=ln.bars[b];if(!br.pulses)br.pulses=[];if(!br.notes)br.notes=[];if(br.volta===undefined)br.volta=0;for(var p=0;p<br.pulses.length;p++){if(br.pulses[p].second===undefined)br.pulses[p].second='';}}}}}}
-function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v19.js').catch(function(){});});}}
+function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v20.js').catch(function(){});});}}
 start();
 })();
