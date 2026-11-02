@@ -1,7 +1,7 @@
 /* Mis Charts 1.7 — JavaScript ES5 compatible con Safari antiguo.
    No librerías, servidores, micrófono ni reconocimiento de escritura. */
 (function(){'use strict';
-var KEY='mis-charts-buttons-v1.7', charts=[], chart=null, sec=0, line=0, bar=0, beat=0, half=0, zoom=false;
+var KEY='mis-charts-buttons-v1.7', charts=[], chart=null, sec=0, line=0, bar=0, beat=0, half=0, zoom=false, previewMode=false, previewPreviousZoom=false;
 var mode='', clipboard=null, builder=null, undoStack=[], noteDuration='♩', noteAcc='', toastTimer=null, lastPreview='';
 var chartHistory=[],staffHistory=[],chosenDuration='quarter',chosenAcc='',dragDuration='',lastTapTime=0,lastTapKey='',tapWindow=430;
 var TYPES=['m','Maj7','7','m7b5','m7','sus2','sus4','dim7','aug7','alt'];
@@ -40,7 +40,7 @@ function currentLine(){return currentSection().lines[line];}
 function currentBar(){return currentLine().bars[bar];}
 function currentBeat(){var b=currentBar(); while(b.pulses.length<numBeats())b.pulses.push(defaultBeat());return b.pulses[beat];}
 function renderLibrary(){var node=$('library-list');node.innerHTML='';if(!charts.length){node.innerHTML='<p class="quiet">Todavía no hay charts. Pulsa Nuevo para empezar.</p>';return;}for(var i=charts.length-1;i>=0;i--){(function(c){var row=document.createElement('div');row.className='library-row';row.innerHTML='<button class="library-item"><span>'+esc(c.title)+'</span><small>'+esc(c.artist)+' · '+esc(c.meter)+' · '+c.sections.length+' secciones</small></button><button class="library-delete">Eliminar</button>';row.querySelector('.library-item').onclick=function(){chart=c;sec=line=bar=beat=half=0;mode='';openChart();};row.querySelector('.library-delete').onclick=function(){if(confirm('¿Eliminar este chart guardado? Esta acción no se puede deshacer.')){charts.splice(charts.indexOf(c),1);save();renderLibrary();}};node.appendChild(row);})(charts[i]);}}
-function openChart(){chartHistory=[];lastTapKey='';show('chart-screen');$('chart-top-name').textContent=chart.title;mode='';$('cancel-copy').className='hide';renderChart();}
+function openChart(){chartHistory=[];lastTapKey='';previewMode=false;$('chart-screen').className='screen screen-light';$('preview-close').className='preview-close hide';show('chart-screen');$('chart-top-name').textContent=chart.title;mode='';$('cancel-copy').className='hide';renderChart();}
 function totalRows(){var n=0;for(var i=0;i<chart.sections.length;i++)n+=chart.sections[i].lines.length;return n;}
 // Presentación musical: una posición por negra, o dos por negra subdividida.
 // Un pulso vacío después de un acorde se indica con «/»; nunca estiramos
@@ -215,7 +215,34 @@ function renderChart(){if(!chart)return;
  $('chart-status').textContent=(mode?'MODO COPIA · ':'')+'Un toque selecciona · Doble toque edita';renderSelectedBarControls();
  if(body.offsetHeight>900){say('El contenido supera una hoja A4; reduce líneas o divide el chart.');}fitPaper();
 }
-function fitPaper(){var sc=$('paper-scroll');var w=sc.clientWidth-16;var factor=zoom?1:Math.min(1,w/780);var stage=$('page-scaler');stage.style.width=(780*factor)+'px';stage.style.height=(1103*factor)+'px';$('paper').style.webkitTransform='scale('+factor+')';$('paper').style.transform='scale('+factor+')';sc.className='paper-scroll'+(zoom?' zoomed':'');}
+function setPreviewMode(enabled){
+ if(!chart)return;
+ previewMode=!!enabled;
+ if(previewMode){
+  previewPreviousZoom=zoom;zoom=false;
+  $('chart-screen').className='screen screen-light preview-mode';
+  $('preview-close').className='preview-close';
+ }else{
+  zoom=previewPreviousZoom;
+  $('chart-screen').className='screen screen-light';
+  $('preview-close').className='preview-close hide';
+ }
+ fitPaper();
+}
+function fitPaper(){
+ var sc=$('paper-scroll'),w=sc.clientWidth-16,factor;
+ if(previewMode){
+  // La hoja se ajusta completa al ancho y alto disponibles.
+  var vw=window.innerWidth||document.documentElement.clientWidth;
+  var vh=window.innerHeight||document.documentElement.clientHeight;
+  factor=Math.min(1,Math.max(0.1,(vw-24)/780),Math.max(0.1,(vh-24)/1103));
+ }else{factor=zoom?1:Math.min(1,w/780);}
+ var stage=$('page-scaler');
+ stage.style.width=(780*factor)+'px';stage.style.height=(1103*factor)+'px';
+ $('paper').style.webkitTransform='scale('+factor+')';
+ $('paper').style.transform='scale('+factor+')';
+ sc.className='paper-scroll'+(!previewMode&&zoom?' zoomed':'');
+}
 function handleSectionTap(si,li){if(mode==='copy-section-source'){clipboard={kind:'section',data:clone(chart.sections[si])};mode='paste-section';say('Ahora toca otra sección para pegar después');renderChart();return;}if(mode==='paste-section'&&clipboard&&clipboard.kind==='section'){chart.sections.splice(si+1,0,clone(clipboard.data));sec=si+1;line=bar=0;mode='';$('cancel-copy').className='hide';save();renderChart();say('Sección pegada');return;}sec=si;line=li;bar=0;renderChart();}
 function refreshSelectedBar(){
  var all=$('paper-body').querySelectorAll('.bar-item');
@@ -470,6 +497,9 @@ $('line-plus').onclick=function(){pushChartHistory();currentSection().lines.push
 $('bar-plus').onclick=function(){if(currentLine().bars.length>=10){say('Máximo 10 compases por línea');return;}pushChartHistory();currentLine().bars.push(newBar());save();renderChart();};$('bar-minus').onclick=function(){if(currentLine().bars.length<=1){say('Debe quedar al menos un compás');return;}pushChartHistory();currentLine().bars.pop();bar=Math.min(bar,currentLine().bars.length-1);save();renderChart();};
 $('repeat-plus').onclick=function(){pushChartHistory();currentLine().repeat=Math.min(16,currentLine().repeat+1);save();renderChart();};$('repeat-minus').onclick=function(){pushChartHistory();currentLine().repeat=Math.max(1,currentLine().repeat-1);save();renderChart();};
 $('zoom-button').onclick=function(){zoom=!zoom;this.textContent=zoom?'Ajustar A4':'Ampliar lectura';fitPaper();};
+$('preview-button').onclick=function(){setPreviewMode(true);};
+$('preview-close').onclick=function(){setPreviewMode(false);};
+document.addEventListener('keydown',function(e){if(previewMode&&e.key==='Escape')setPreviewMode(false);});
 $('copy-bar').onclick=function(){mode='copy-bar-source';$('cancel-copy').className='';say('Toca el compás que quieres copiar');};$('copy-section').onclick=function(){mode='copy-section-source';$('cancel-copy').className='';say('Toca el nombre rojo de la sección a copiar');};$('cancel-copy').onclick=function(){mode='';clipboard=null;this.className='hide';renderChart();};
 $('editor-back').onclick=$('editor-done').onclick=function(){save();show('chart-screen');renderChart();};
 $('apply-chord').onclick=apply;$('chord-preview').oninput=function(){touchBuild(lastPreview);lastPreview=this.value;builder=parseChord(this.value);renderPalette();};
@@ -493,6 +523,6 @@ $('volta-clear').onclick=function(){setVolta(0);};
 $('import-button').onclick=function(){$('import-file').click();};$('import-file').onchange=function(e){var f=this.files&&this.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(){saveImportText(reader.result);};reader.readAsText(f);this.value='';};window.addEventListener('resize',function(){if(chart&&$('chart-screen').className.indexOf('hide')===-1)fitPaper();});
 }
 function ensureData(){for(var c=0;c<charts.length;c++){var ob=charts[c];if(!ob.sections)ob.sections=[];for(var s=0;s<ob.sections.length;s++){var section=ob.sections[s];if(!section.lines)section.lines=[];for(var l=0;l<section.lines.length;l++){var ln=section.lines[l];if(!ln.bars)ln.bars=[];if(!ln.repeat)ln.repeat=1;for(var b=0;b<ln.bars.length;b++){var br=ln.bars[b];if(!br.pulses)br.pulses=[];if(!br.notes)br.notes=[];if(br.volta===undefined)br.volta=0;for(var p=0;p<br.pulses.length;p++){if(br.pulses[p].second===undefined)br.pulses[p].second='';}}}}}}
-function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v17.js').catch(function(){});});}}
+function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v18.js').catch(function(){});});}}
 start();
 })();
