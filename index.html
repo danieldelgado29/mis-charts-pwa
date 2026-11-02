@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" manifest="offline-v18.manifest">
+<html lang="es" manifest="offline-v19.manifest">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=1.8.0">
-<link rel="stylesheet" href="styles.css?v=1.8.0">
+<link rel="manifest" href="manifest.webmanifest?v=1.9.0">
+<link rel="stylesheet" href="styles.css?v=1.9.0">
 <title>Mis Charts · Editor musical</title>
 </head>
 <body>
@@ -37,9 +37,9 @@
 </section>
 <section class="screen screen-light hide" id="chart-screen">
 <header class="top chart-top"><button id="chart-back" class="back">‹</button><strong id="chart-top-name">Mis Charts</strong><div class="top-actions"><button id="preview-button" class="preview-trigger" type="button" aria-label="Ver hoja A4 completa">Preview</button><button id="export-button" title="Exportar respaldo">↥</button><button id="print-button" title="Imprimir A4">▣</button></div></header>
-  <div class="chart-toolbar"><span class="version-tag">PWA v1.8 · PREVIEW A4</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
+  <div class="chart-toolbar"><span class="version-tag">PWA v1.9 · COPIAR Y PEGAR</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
   <div class="line-controls"><button id="bar-minus">− Compás</button><button id="bar-plus">+ Compás</button><button id="repeat-minus">− x</button><button id="repeat-plus">+ x</button><button id="zoom-button">Ampliar lectura</button></div>
-  <div class="line-controls"><button id="copy-bar">Copiar compás</button><button id="copy-section">Copiar sección</button><button id="cancel-copy" class="hide">Cancelar</button><span id="line-info" class="line-info"></span></div>
+  <div class="line-controls"><button id="copy-bar">Copiar compás</button><button id="copy-section">Copiar sección</button><button id="paste-clipboard" class="paste-action" type="button" disabled>Pegar</button><button id="cancel-copy" class="hide" type="button">Cancelar copia</button><span id="line-info" class="line-info"></span><span id="clipboard-status" class="clipboard-status" role="status" aria-live="polite">Selecciona el origen y pulsa Copiar</span></div>
     <div class="score-actions">
       <div class="selected-label"><span class="selection-led"></span><b id="selected-bar-label">Intro · Compás 1</b><small>Un toque: seleccionar · Doble toque: acordes</small></div>
       <div class="score-action-row">
@@ -97,5 +97,5 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="app.js?v=1.8.0"></script>
+<script src="app.js?v=1.9.0"></script>
 </body></html>
