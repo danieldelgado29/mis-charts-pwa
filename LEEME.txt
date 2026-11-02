@@ -1,0 +1,27 @@
+MIS CHARTS PWA v1.7 — EDICIÓN DIRECTA DE COMPASES Y PARTITURA
+
+Instalar en: ~/Documents/MIS-CHARTS/PWA/v1.7
+
+- Toque sencillo: selecciona el compás.
+- Doble toque rápido sobre el mismo compás: editor de acordes.
+- Fuera del editor: repetir inicio/fin, Segno, Coda, 1ª/2ª vuelta, Deshacer.
+- Partitura abre un editor independiente con pentagrama por pulsos.
+- Arrastra redondas, blancas, negras, corcheas o semicorcheas al pentagrama.
+- También selecciona la figura y toca el pentagrama (útil en Safari antiguo).
+- La posición vertical determina la nota y la horizontal su pulso.
+- Conserva los charts en almacenamiento local del mismo origen. Exporta JSON.
+- No requiere macOS 27 ni Xcode.
+
+Iniciar desde Terminal:
+python3 -m http.server 8097 --bind 127.0.0.1 --directory "$HOME/Documents/MIS-CHARTS/PWA/v1.7"
+
+Abrir http://127.0.0.1:8097/?v=1.6.0
+
+NUEVO: barra verde de repetición sustituye el límite negro; casillas 1.ª/2.ª sobre compás.
+
+INSTALACIÓN SEGURA:
+Guardar ZIP en ~/Documents/MIS-CHARTS/Descargas; extraer en ~/Documents/MIS-CHARTS/PWA/v1.7
+Servidor: python3 -m http.server 8097 --bind 127.0.0.1 --directory "$HOME/Documents/MIS-CHARTS/PWA/v1.7"
+Abrir: http://127.0.0.1:8097/?v=1.7.0
+IMPORTANTE: en Firefox pulsar Cmd+0 para restaurar zoom 100%.
+Los charts antiguos se copian mediante clave de almacenamiento nueva, sin borrar versiones anteriores.

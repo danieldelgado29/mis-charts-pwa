@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" manifest="offline-v17.manifest">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Mis Charts">
+<meta name="description" content="Charts musicales offline con editor por botones">
+<link rel="apple-touch-icon" href="icons/icon180.png">
+<link rel="icon" href="icons/icon192.png">
+<link rel="manifest" href="manifest.webmanifest?v=1.7.0">
+<link rel="stylesheet" href="styles.css?v=1.7.0">
+<title>Mis Charts · Editor musical</title>
+</head>
+<body>
+<div id="app">
+<section class="screen screen-dark" id="home-screen">
+  <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
+    <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
+    <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v1.7</small></div>
+</section>
+<section class="screen screen-dark hide" id="new-screen">
+  <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
+  <form id="new-form" class="new-form"><div class="eyebrow">DATOS DEL TEMA</div><h2>Empezar.</h2>
+  <label>Nombre del tema<input id="song-title" type="text" required maxlength="90" autocomplete="off" placeholder="Nombre de la canción"></label>
+  <label>Artista<input id="song-artist" type="text" maxlength="90" autocomplete="off" placeholder="Artista"></label>
+  <label>Métrica<select id="song-meter"><option>4/4</option><option>2/4</option><option>3/4</option><option>5/4</option><option>6/4</option><option>7/4</option><option>2/2</option><option>3/8</option><option>5/8</option><option>6/8</option><option>7/8</option><option>9/8</option><option>12/8</option></select></label>
+  <button type="submit" class="wide hot">INICIAR →</button></form>
+</section>
+<section class="screen screen-dark hide" id="library-screen">
+  <header class="top dark-top"><button id="library-back" class="back">‹</button><strong>Mis charts guardados</strong><button id="import-button" class="text-button">Importar</button></header>
+  <div class="library-main"><div class="eyebrow">EN ESTE DISPOSITIVO</div><div id="library-list"></div><p class="quiet">El almacenamiento es local a este navegador. Exporta respaldos JSON regularmente: borrar datos de Safari puede eliminar tus charts.</p></div>
+  <input type="file" id="import-file" accept=".json,application/json" class="hide">
+</section>
+<section class="screen screen-light hide" id="chart-screen">
+<header class="top chart-top"><button id="chart-back" class="back">‹</button><strong id="chart-top-name">Mis Charts</strong><div class="top-actions"><button id="export-button" title="Exportar respaldo">↥</button><button id="print-button" title="Imprimir A4">▣</button></div></header>
+  <div class="chart-toolbar"><span class="version-tag">PWA v1.7 · BARRAS Y VUELTAS</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
+  <div class="line-controls"><button id="bar-minus">− Compás</button><button id="bar-plus">+ Compás</button><button id="repeat-minus">− x</button><button id="repeat-plus">+ x</button><button id="zoom-button">Ampliar lectura</button></div>
+  <div class="line-controls"><button id="copy-bar">Copiar compás</button><button id="copy-section">Copiar sección</button><button id="cancel-copy" class="hide">Cancelar</button><span id="line-info" class="line-info"></span></div>
+    <div class="score-actions">
+      <div class="selected-label"><span class="selection-led"></span><b id="selected-bar-label">Intro · Compás 1</b><small>Un toque: seleccionar · Doble toque: acordes</small></div>
+      <div class="score-action-row">
+        <button id="chart-undo" title="Deshacer acción en la hoja" class="quiet-action">↶ Deshacer</button>
+        <button id="repeat-start" class="score-symbol" title="Repetición de inicio">𝄆 Inicio</button>
+        <button id="repeat-end" class="score-symbol" title="Repetición de fin">𝄇 Fin</button>
+        <button id="chart-segno" class="score-symbol">𝄋 Segno</button>
+        <button id="chart-coda" class="score-symbol">𝄌 Coda</button>
+        <button id="open-staff" class="score-staff">𝄞 Partitura</button>
+      </div>
+      <div class="score-action-row endings-outside" aria-label="Casillas de primera y segunda vuelta">
+        <span class="volta-toolbar-label">CASILLAS DE REPETICIÓN</span>
+        <button id="volta-one" type="button" class="volta-button" title="Dibujar primera vuelta encima del compás seleccionado">1.ª vuelta</button>
+        <button id="volta-two" type="button" class="volta-button" title="Dibujar segunda vuelta encima del compás seleccionado">2.ª vuelta</button>
+        <button id="volta-clear" type="button" class="volta-clear" title="Quitar casilla del compás">Quitar</button>
+      </div>
+    </div>
+  </div>
+  <div id="paper-scroll" class="paper-scroll"><div id="page-scaler"><div id="paper" class="paper"><div class="paper-header"><h2 id="paper-title"></h2><div id="paper-artist"></div><div id="paper-meter"></div></div><div id="paper-body"></div><div class="paper-footer">MIS CHARTS · A4</div></div></div></div>
+  <div class="chart-bottom"><span id="chart-status">Toca para seleccionar · Doble toque para editar</span><button id="edit-first" class="hot">Editar seleccionado</button></div>
+</section>
+<section class="screen screen-light hide" id="editor-screen">
+  <header class="top editor-top"><button id="editor-back" class="back">‹</button><strong id="editor-title">Editar compás</strong><button id="editor-done" class="done hot">Listo ✓</button></header>
+  <div class="editor-main"><div class="eyebrow">SELECCIONA EL PULSO</div><div id="beats"></div><div id="half-controls" class="half-controls hide"><button data-half="0">1.ª corchea</button><button data-half="1">2.ª corchea</button></div>
+  <div class="chord-panel"><div class="field-label">ACORDE EN EL PULSO <b id="beat-index">1</b></div><div class="entry-line"><input id="chord-preview" class="chord-preview" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Acorde" placeholder="Cmaj7#11"><button id="apply-chord" class="hot apply" type="button">Aplicar</button><button id="undo-chord" type="button" class="entry-action undo" title="Deshacer último cambio" aria-label="Deshacer">↶ <span>Deshacer</span></button><button id="erase-chord" type="button" class="entry-action erase" title="Borrar el acorde completo de este pulso" aria-label="Borrar acorde completo">✕ <span>Borrar</span></button></div><div id="chord-hint" class="hint">Pulsa las opciones para formar el acorde; Aplicar guarda en el pulso.</div></div>
+  <div class="palette"><div class="field-label">1 · NOTAS</div><div id="root-row" class="key-row notes-row"></div>
+  <div class="field-label">2 · ALTERACIONES / BAJO</div><div id="alter-row" class="key-row alter-row"></div>
+  <div class="field-label">3 · ACORDES COMUNES</div><div id="common-row" class="key-row common-row"></div>
+  <div class="field-label">4 · TENSIONES</div><div id="tension-row" class="key-row tension-row"></div>
+  <button id="expand-chords" class="expand" aria-expanded="false">Más tipos de acorde y modificadores ▾</button><div id="advanced" class="hide"><div class="field-label">OTROS ACORDES</div><div id="other-row" class="key-row many-row"></div><div class="field-label">NOTAS AÑADIDAS · OMISIONES</div><div id="extra-row" class="key-row many-row"></div></div>
+  <div class="editor-tools"><button id="subdivide">Subdividir negra</button><button id="kick">Kick: no</button></div>
+  <div class="editor-footer"><button id="previous-bar">← Anterior</button><button id="next-bar">Siguiente →</button></div>
+  </div>
+  </div>
+</section>
+<section class="screen screen-light hide" id="staff-screen">
+  <header class="top editor-top"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-done" class="done hot">Listo ✓</button></header>
+  <main class="staff-editor-main">
+    <div class="staff-kicker">CLAVE DE SOL · PENTAGRAMA DEL COMPÁS</div>
+    <p class="staff-intro">Arrastra una figura al pentagrama y suéltala en el pulso y altura deseados. También puedes elegir una figura y tocar directamente el pentagrama.</p>
+    <div class="staff-tile"><div class="staff-topline"><b id="staff-meter">4/4</b><span>Cuatro áreas de pulso</span></div>
+    <div class="staff-scroll"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 228" aria-label="Pentagrama editable dividido por pulsos"></svg></div></div>
+    <div class="staff-palette-head">FIGURAS MUSICALES <span id="chosen-duration">Seleccionada: negra ♩</span></div>
+    <div id="duration-palette" class="duration-palette">
+      <button type="button" class="duration-chip" data-duration="whole" draggable="true"><span class="duration-glyph">𝅝</span><span>Redonda</span></button>
+      <button type="button" class="duration-chip" data-duration="half" draggable="true"><span class="duration-glyph">𝅗𝅥</span><span>Blanca</span></button>
+      <button type="button" class="duration-chip active" data-duration="quarter" draggable="true"><span class="duration-glyph">♩</span><span>Negra</span></button>
+      <button type="button" class="duration-chip" data-duration="eighth" draggable="true"><span class="duration-glyph">♪</span><span>Corchea</span></button>
+      <button type="button" class="duration-chip" data-duration="sixteenth" draggable="true"><span class="duration-glyph">♬</span><span>Semicorchea</span></button>
+    </div>
+    <div class="staff-controls"><div class="staff-accidentals"><b>Alteración:</b><button data-acc="" class="active">♮</button><button data-acc="#">♯</button><button data-acc="b">♭</button></div>
+    <button id="staff-undo" class="quiet-action">↶ Deshacer nota</button><button id="staff-delete" class="quiet-action">Borrar última</button></div>
+    <div class="staff-bottom-hint">La posición horizontal determina el pulso; la vertical determina la nota. Toca una nota colocada para quitarla. Cada nota muestra su nombre.</div>
+  </main>
+</section>
+</div><div id="toast" class="toast hide"></div>
+<script src="app.js?v=1.7.0"></script>
+</body></html>

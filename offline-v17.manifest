@@ -1,0 +1,11 @@
+CACHE MANIFEST
+# v1.7.0
+CACHE:
+index.html
+styles.css
+app.js
+icons/icon180.png
+icons/icon192.png
+icons/icon512.png
+NETWORK:
+*
