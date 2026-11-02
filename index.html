@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" manifest="offline-v17.manifest">
+<html lang="es" manifest="offline-v18.manifest">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=1.7.0">
-<link rel="stylesheet" href="styles.css?v=1.7.0">
+<link rel="manifest" href="manifest.webmanifest?v=1.8.0">
+<link rel="stylesheet" href="styles.css?v=1.8.0">
 <title>Mis Charts · Editor musical</title>
 </head>
 <body>
@@ -36,8 +36,8 @@
   <input type="file" id="import-file" accept=".json,application/json" class="hide">
 </section>
 <section class="screen screen-light hide" id="chart-screen">
-<header class="top chart-top"><button id="chart-back" class="back">‹</button><strong id="chart-top-name">Mis Charts</strong><div class="top-actions"><button id="export-button" title="Exportar respaldo">↥</button><button id="print-button" title="Imprimir A4">▣</button></div></header>
-  <div class="chart-toolbar"><span class="version-tag">PWA v1.7 · BARRAS Y VUELTAS</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
+<header class="top chart-top"><button id="chart-back" class="back">‹</button><strong id="chart-top-name">Mis Charts</strong><div class="top-actions"><button id="preview-button" class="preview-trigger" type="button" aria-label="Ver hoja A4 completa">Preview</button><button id="export-button" title="Exportar respaldo">↥</button><button id="print-button" title="Imprimir A4">▣</button></div></header>
+  <div class="chart-toolbar"><span class="version-tag">PWA v1.8 · PREVIEW A4</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
   <div class="line-controls"><button id="bar-minus">− Compás</button><button id="bar-plus">+ Compás</button><button id="repeat-minus">− x</button><button id="repeat-plus">+ x</button><button id="zoom-button">Ampliar lectura</button></div>
   <div class="line-controls"><button id="copy-bar">Copiar compás</button><button id="copy-section">Copiar sección</button><button id="cancel-copy" class="hide">Cancelar</button><span id="line-info" class="line-info"></span></div>
     <div class="score-actions">
@@ -60,6 +60,7 @@
   </div>
   <div id="paper-scroll" class="paper-scroll"><div id="page-scaler"><div id="paper" class="paper"><div class="paper-header"><h2 id="paper-title"></h2><div id="paper-artist"></div><div id="paper-meter"></div></div><div id="paper-body"></div><div class="paper-footer">MIS CHARTS · A4</div></div></div></div>
   <div class="chart-bottom"><span id="chart-status">Toca para seleccionar · Doble toque para editar</span><button id="edit-first" class="hot">Editar seleccionado</button></div>
+  <button id="preview-close" class="preview-close hide" type="button" aria-label="Cerrar preview y volver al editor">‹ Editar</button>
 </section>
 <section class="screen screen-light hide" id="editor-screen">
   <header class="top editor-top"><button id="editor-back" class="back">‹</button><strong id="editor-title">Editar compás</strong><button id="editor-done" class="done hot">Listo ✓</button></header>
@@ -96,5 +97,5 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="app.js?v=1.7.0"></script>
+<script src="app.js?v=1.8.0"></script>
 </body></html>
