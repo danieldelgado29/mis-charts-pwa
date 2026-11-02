@@ -40,7 +40,7 @@ function currentLine(){return currentSection().lines[line];}
 function currentBar(){return currentLine().bars[bar];}
 function currentBeat(){var b=currentBar(); while(b.pulses.length<numBeats())b.pulses.push(defaultBeat());return b.pulses[beat];}
 function renderLibrary(){var node=$('library-list');node.innerHTML='';if(!charts.length){node.innerHTML='<p class="quiet">Todavía no hay charts. Pulsa Nuevo para empezar.</p>';return;}for(var i=charts.length-1;i>=0;i--){(function(c){var row=document.createElement('div');row.className='library-row';row.innerHTML='<button class="library-item"><span>'+esc(c.title)+'</span><small>'+esc(c.artist)+' · '+esc(c.meter)+' · '+c.sections.length+' secciones</small></button><button class="library-delete">Eliminar</button>';row.querySelector('.library-item').onclick=function(){chart=c;sec=line=bar=beat=half=0;mode='';openChart();};row.querySelector('.library-delete').onclick=function(){if(confirm('¿Eliminar este chart guardado? Esta acción no se puede deshacer.')){charts.splice(charts.indexOf(c),1);save();renderLibrary();}};node.appendChild(row);})(charts[i]);}}
-function openChart(){chartHistory=[];lastTapKey='';previewMode=false;$('chart-screen').className='screen screen-light';$('preview-close').className='preview-close hide';show('chart-screen');$('chart-top-name').textContent=chart.title;mode='';$('cancel-copy').className='hide';renderChart();}
+function openChart(){chartHistory=[];lastTapKey='';clipboard=null;mode='';previewMode=false;$('chart-screen').className='screen screen-light';$('preview-close').className='preview-close hide';show('chart-screen');$('chart-top-name').textContent=chart.title;renderChart();}
 function totalRows(){var n=0;for(var i=0;i<chart.sections.length;i++)n+=chart.sections[i].lines.length;return n;}
 // Presentación musical: una posición por negra, o dos por negra subdividida.
 // Un pulso vacío después de un acorde se indica con «/»; nunca estiramos
@@ -212,7 +212,7 @@ function renderChart(){if(!chart)return;
    })(si,li,section,section.lines[li]);
   }
  }
- $('chart-status').textContent=(mode?'MODO COPIA · ':'')+'Un toque selecciona · Doble toque edita';renderSelectedBarControls();
+ $('chart-status').textContent='Un toque selecciona · Doble toque edita';renderSelectedBarControls();updateClipboardUI();
  if(body.offsetHeight>900){say('El contenido supera una hoja A4; reduce líneas o divide el chart.');}fitPaper();
 }
 function setPreviewMode(enabled){
@@ -243,7 +243,45 @@ function fitPaper(){
  $('paper').style.transform='scale('+factor+')';
  sc.className='paper-scroll'+(!previewMode&&zoom?' zoomed':'');
 }
-function handleSectionTap(si,li){if(mode==='copy-section-source'){clipboard={kind:'section',data:clone(chart.sections[si])};mode='paste-section';say('Ahora toca otra sección para pegar después');renderChart();return;}if(mode==='paste-section'&&clipboard&&clipboard.kind==='section'){chart.sections.splice(si+1,0,clone(clipboard.data));sec=si+1;line=bar=0;mode='';$('cancel-copy').className='hide';save();renderChart();say('Sección pegada');return;}sec=si;line=li;bar=0;renderChart();}
+function handleSectionTap(si,li){sec=si;line=li;bar=0;lastTapKey='';renderChart();}
+function updateClipboardUI(){
+ var paste=$('paste-clipboard'),cancel=$('cancel-copy'),status=$('clipboard-status');
+ if(!paste||!cancel||!status)return;
+ var kind=clipboard&&clipboard.kind;
+ paste.disabled=!kind;
+ paste.textContent=kind==='section'?'Pegar sección':kind==='bar'?'Pegar compás':'Pegar';
+ cancel.className=kind?'':'hide';
+ status.textContent=kind==='bar'?'Compás copiado · selecciona uno vacío y pulsa Pegar':kind==='section'?'Sección copiada · selecciona dónde insertarla y pulsa Pegar':'Selecciona el origen y pulsa Copiar';
+}
+function barIsEmptyForPaste(b){
+ if(!b||b.first||b.second||b.volta||b.repeatStart||b.repeatEnd||b.segno||b.coda||b.staff||(b.notes&&b.notes.length))return false;
+ var p=b.pulses||[];
+ for(var i=0;i<p.length;i++)if(p[i]&&(p[i].chord||p[i].second||p[i].kick||p[i].split))return false;
+ return true;
+}
+function copySelectedBar(){
+ clipboard={kind:'bar',data:clone(currentBar())};lastTapKey='';updateClipboardUI();
+ say('Compás copiado. Selecciona uno vacío y pulsa Pegar');
+}
+function copySelectedSection(){
+ clipboard={kind:'section',data:clone(currentSection())};lastTapKey='';updateClipboardUI();
+ say('Sección copiada. Selecciona la sección de destino y pulsa Pegar');
+}
+function pasteSelected(){
+ if(!clipboard){say('Primero copia un compás o sección');return;}
+ lastTapKey='';
+ if(clipboard.kind==='bar'){
+  if(!barIsEmptyForPaste(currentBar())){say('El compás tiene contenido; selecciona uno vacío');return;}
+  pushChartHistory();
+  currentLine().bars[bar]=clone(clipboard.data);
+  save();renderChart();say('Compás pegado. Puedes pegar otra copia');
+ }else if(clipboard.kind==='section'){
+  pushChartHistory();
+  chart.sections.splice(sec+1,0,clone(clipboard.data));
+  sec++;line=bar=0;
+  save();renderChart();say('Sección pegada después de la seleccionada');
+ }
+}
 function refreshSelectedBar(){
  var all=$('paper-body').querySelectorAll('.bar-item');
  for(var k=0;k<all.length;k++){
@@ -255,7 +293,7 @@ function refreshSelectedBar(){
  }
  renderSelectedBarControls();
 }
-function handleBarTap(si,li,bi){if(mode==='copy-bar-source'){clipboard={kind:'bar',data:clone(chart.sections[si].lines[li].bars[bi])};mode='paste-bar';say('Toca un compás vacío para pegar');renderChart();return;}if(mode==='paste-bar'&&clipboard&&clipboard.kind==='bar'){var target=chart.sections[si].lines[li].bars[bi],empty=true;for(var i=0;i<target.pulses.length;i++)if(target.pulses[i].chord||target.pulses[i].second)empty=false;if(!empty){say('Elige un compás vacío para pegar');return;}chart.sections[si].lines[li].bars[bi]=clone(clipboard.data);mode='';$('cancel-copy').className='hide';sec=si;line=li;bar=bi;save();renderChart();say('Compás pegado');return;}
+function handleBarTap(si,li,bi){
 var key=String(si)+'-'+String(li)+'-'+String(bi),now=Date.now();
  var twice=lastTapKey===key&&(now-lastTapTime)<tapWindow;
  lastTapTime=now;lastTapKey=key;
@@ -500,7 +538,7 @@ $('zoom-button').onclick=function(){zoom=!zoom;this.textContent=zoom?'Ajustar A4
 $('preview-button').onclick=function(){setPreviewMode(true);};
 $('preview-close').onclick=function(){setPreviewMode(false);};
 document.addEventListener('keydown',function(e){if(previewMode&&e.key==='Escape')setPreviewMode(false);});
-$('copy-bar').onclick=function(){mode='copy-bar-source';$('cancel-copy').className='';say('Toca el compás que quieres copiar');};$('copy-section').onclick=function(){mode='copy-section-source';$('cancel-copy').className='';say('Toca el nombre rojo de la sección a copiar');};$('cancel-copy').onclick=function(){mode='';clipboard=null;this.className='hide';renderChart();};
+$('copy-bar').onclick=copySelectedBar;$('copy-section').onclick=copySelectedSection;$('paste-clipboard').onclick=pasteSelected;$('cancel-copy').onclick=function(){clipboard=null;mode='';lastTapKey='';updateClipboardUI();say('Copia cancelada');};
 $('editor-back').onclick=$('editor-done').onclick=function(){save();show('chart-screen');renderChart();};
 $('apply-chord').onclick=apply;$('chord-preview').oninput=function(){touchBuild(lastPreview);lastPreview=this.value;builder=parseChord(this.value);renderPalette();};
 $('erase-chord').onclick=clearChord;$('undo-chord').onclick=undoChord;
@@ -523,6 +561,6 @@ $('volta-clear').onclick=function(){setVolta(0);};
 $('import-button').onclick=function(){$('import-file').click();};$('import-file').onchange=function(e){var f=this.files&&this.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(){saveImportText(reader.result);};reader.readAsText(f);this.value='';};window.addEventListener('resize',function(){if(chart&&$('chart-screen').className.indexOf('hide')===-1)fitPaper();});
 }
 function ensureData(){for(var c=0;c<charts.length;c++){var ob=charts[c];if(!ob.sections)ob.sections=[];for(var s=0;s<ob.sections.length;s++){var section=ob.sections[s];if(!section.lines)section.lines=[];for(var l=0;l<section.lines.length;l++){var ln=section.lines[l];if(!ln.bars)ln.bars=[];if(!ln.repeat)ln.repeat=1;for(var b=0;b<ln.bars.length;b++){var br=ln.bars[b];if(!br.pulses)br.pulses=[];if(!br.notes)br.notes=[];if(br.volta===undefined)br.volta=0;for(var p=0;p<br.pulses.length;p++){if(br.pulses[p].second===undefined)br.pulses[p].second='';}}}}}}
-function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v18.js').catch(function(){});});}}
+function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v19.js').catch(function(){});});}}
 start();
 })();
