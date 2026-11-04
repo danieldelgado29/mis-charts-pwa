@@ -192,6 +192,12 @@
  #staff-screen .editor-switch,#editor-screen .editor-switch{font-size:11px;padding:9px 7px}
 }
 </style>
+<style id="mis-charts-v24-extra">
+#staff-screen .staff-more-values{margin:14px 0 10px;border:1px solid #dedee4;background:#fff;border-radius:11px;padding:10px}
+#staff-screen .staff-more-values summary{color:#292a2e;font-size:13px;font-weight:800;cursor:pointer}
+#staff-screen .staff-more-values[open] summary{margin-bottom:12px}
+#staff-screen .staff-more-values .staff-palette-head{margin-top:10px}
+</style>
 </head>
 <body>
 <div id="app">
@@ -306,6 +312,19 @@
       <button type="button" class="duration-chip" data-rest="eighth"><span class="duration-glyph" aria-hidden="true"></span><span>Corchea</span></button>
       <button type="button" class="duration-chip" data-rest="sixteenth"><span class="duration-glyph" aria-hidden="true"></span><span>Semicorchea</span></button>
     </div>
+    <details class="staff-more-values">
+      <summary>Más figuras y silencios: fusas y semifusas</summary>
+      <div class="staff-palette-head">FIGURAS ADICIONALES</div>
+      <div class="duration-palette">
+        <button type="button" class="duration-chip" data-duration="thirtysecond" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Fusa</span></button>
+        <button type="button" class="duration-chip" data-duration="sixtyfourth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Semifusa</span></button>
+      </div>
+      <div class="staff-palette-head">SILENCIOS ADICIONALES</div>
+      <div class="duration-palette">
+        <button type="button" class="duration-chip" data-rest="thirtysecond"><span class="duration-glyph" aria-hidden="true"></span><span>Fusa</span></button>
+        <button type="button" class="duration-chip" data-rest="sixtyfourth"><span class="duration-glyph" aria-hidden="true"></span><span>Semifusa</span></button>
+      </div>
+    </details>
     <div class="staff-dotted-row">
       <button type="button" id="staff-dot" aria-pressed="false" title="Añadir o quitar puntillo de prolongación">• Puntillo</button>
       <span>Desplaza la partitura con un dedo. Mantén una nota pulsada para moverla.</span>
