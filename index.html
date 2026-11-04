@@ -40,6 +40,61 @@
 .jpg-box button{padding:10px;border:1px solid #ddd;border-radius:9px;background:#fff;font-weight:800}
 .jpg-box #jpg-download{background:#d72d37;color:#fff}
 </style>
+<style id="mis-charts-v22-style">
+/* v2.2 — colores neutros en los botones; rojo solo en Preview y Deshacer. */
+#chart-screen .chart-toolbar .quick-tools-row>button:not(#preview-button):not(#chart-undo),
+#chart-screen .chart-toolbar .advanced-tools button:not(.hide){
+ background:#fff!important;color:#151619!important;border-color:#d5d6db!important;
+}
+#chart-screen .chart-toolbar .quick-tools-row>select{background:#fff!important;color:#151619!important}
+#chart-screen .chart-toolbar .quick-tools-row #preview-button{
+ background:#d72d37!important;color:#fff!important;border-color:#d72d37!important;
+}
+#chart-screen .chart-toolbar .quick-tools-row #chart-undo{
+ background:#fff!important;color:#d72d37!important;border-color:#d7d9df!important;
+}
+/* Cada acción relevante está disponible sin abrir Herramientas. */
+#chart-screen .chart-toolbar .quick-tools-row.action-tools{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.25fr) minmax(0,1.1fr) minmax(0,.86fr) 40px 40px 40px;
+ gap:4px;overflow:visible!important;width:100%;margin-top:3px;
+}
+#chart-screen .chart-toolbar .quick-tools-row.action-tools>button{
+ box-sizing:border-box;width:100%;min-width:0;min-height:40px;padding:5px 3px;
+ display:flex;align-items:center;justify-content:center;
+ font-size:11px;font-weight:850;white-space:nowrap;
+}
+#chart-screen .chart-toolbar #paste-clipboard:disabled{color:#92949c!important;background:#e6e7eb!important}
+#chart-screen .chart-toolbar .symbol-only,#chart-screen .chart-toolbar .undo-icon{
+ width:40px;height:40px;min-width:40px;min-height:40px;padding:5px!important;
+ border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+#chart-screen .chart-toolbar .symbol-only svg,
+#chart-screen .chart-toolbar .undo-icon svg{display:block;width:29px;height:29px;flex:0 0 29px}
+#chart-screen .chart-toolbar .symbol-only svg path,
+#chart-screen .chart-toolbar .symbol-only svg line,
+#chart-screen .chart-toolbar .symbol-only svg circle{vector-effect:non-scaling-stroke}
+#chart-screen .chart-toolbar .advanced-tools .symbol-only{min-width:45px;width:45px;min-height:41px}
+#chart-screen .chart-toolbar .advanced-tools .symbol-only svg{width:29px;height:29px}
+#chart-screen .chart-toolbar .quick-tools-row .score-symbol.active,
+#chart-screen .chart-toolbar .advanced-tools .score-symbol.active{
+ background:#e0f5e7!important;border-color:#69b889!important;color:#111!important;
+}
+/* Etiquetas rojas: altas y gruesas como los separadores de los compases. */
+#chart-screen .section-label{
+ font-size:25px!important;font-weight:950!important;line-height:1.0!important;
+ letter-spacing:-.7px!important;display:flex;align-items:center;
+ color:#cb2533!important;padding-right:3px!important;text-overflow:clip;
+}
+#chart-screen .section-label.section-label-long{font-size:19px!important;letter-spacing:-.6px!important}
+#chart-screen .staff-in-bar{width:100%;height:100%;display:block;flex:1 1 100%;min-width:0}
+#chart-screen .staff-in-bar svg{width:100%;height:100%;display:block}
+@media(max-width:365px){
+ #chart-screen .chart-toolbar .quick-tools-row.action-tools{grid-template-columns:minmax(0,1fr) minmax(0,.95fr) minmax(0,.72fr) 36px 36px 36px;gap:3px}
+ #chart-screen .chart-toolbar .quick-tools-row.action-tools>button{font-size:10px;min-height:38px}
+ #chart-screen .chart-toolbar .symbol-only svg,#chart-screen .chart-toolbar .undo-icon svg{width:27px;height:27px}
+}
+</style>
 </head>
 <body>
 <div id="app">
