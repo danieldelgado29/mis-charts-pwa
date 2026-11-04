@@ -28,11 +28,11 @@ function clusters(events,meter){
 }
 function cfg(options){
  var o=options||{},editor=!!o.editor,hasChords=!!o.hasChords,baseW=o.width||900;
- var top=editor?112:hasChords?99:74,space=editor?20:16;
- return{editor:editor,hasChords:hasChords,width:baseW,height:editor?280:hasChords?204:178,
+ var top=editor?70:hasChords?90:66,space=editor?20:14;
+ return{editor:editor,hasChords:hasChords,width:baseW,height:editor?216:hasChords?172:146,
  left:editor?62:13,right:editor?baseW-54:baseW-13,top:top,space:space,
- rx:editor?13:10,ry:editor?8.4:6.8,stem:editor?60:48,
- nameSize:editor?24:21,nameY:editor?48:hasChords?57:38, chordY:editor?20:25,
+ rx:editor?13:10,ry:editor?8.4:6.8,stem:editor?60:43,
+ nameSize:editor?24:21,nameY:editor?27:hasChords?43:25, chordY:editor?20:25,
  meter:o.meter||'4/4',pulses:o.pulses||4,showPulse:editor};
 }
 function pitchY(p,c){
@@ -86,7 +86,7 @@ function notesLayout(bar,options){
  return{c:c,events:ev,beams:g.groups,beamLookup:g.lookup};
 }
 function renderSVG(bar,options){
- var z=notesLayout(bar,options),c=z.c,ev=z.events,lines=[];
+ var z=notesLayout(bar,options),c=z.c,ev=z.events,lines=[],noteLabels=[];
  if(c.showPulse){
   for(var i=0;i<c.pulses;i++){
    var px=c.left+i*(c.right-c.left)/c.pulses,ww=(c.right-c.left)/c.pulses;
@@ -115,12 +115,11 @@ function renderSVG(bar,options){
  for(var e=0;e<ev.length;e++){
   var it=ev[e],nt=it.note,x=pointX(nt,it.index,c),y=pitchY(nt.pitch,c);
   var isRest=type(nt)==='rest',gr=z.beamLookup[it.index],up=gr?gr.up:y>=c.top+c.space*2;
-  var noteName=String(nt.pitch||'E4').replace(/#/g,'♯').replace(/b/g,'♭');
-  var lblY=c.nameY;
-  if(e&&Math.abs(it.time-ev[e-1].time)<.75&&e%2)lblY+=c.editor?28:24;
+  var noteName=String(nt.pitch||'E4').replace(/\d+$/,'').replace(/#/g,'♯').replace(/b/g,'♭');
+  var lblY=c.nameY; // Ningún nombre baja hasta las barras de unión.
   var hit=c.editor?' data-note="'+it.index+'"':'';
   lines.push('<g'+hit+' class="'+(c.editor?'staff-note-hit':'staff-score-note')+'">');
-  if(!isRest)lines.push('<text x="'+fmt(x)+'" y="'+fmt(lblY)+'" font-size="'+c.nameSize+'" font-family="Arial,sans-serif" font-weight="900" fill="#c32a37" text-anchor="middle">'+esc(noteName)+'</text>');
+  if(!isRest)noteLabels.push({x:x,y:lblY,name:noteName});
   // Línea adicional para C4 y notas por debajo, o A5 y superiores.
   if(!isRest){
    var low=c.top+4*c.space,high=c.top;
@@ -176,6 +175,11 @@ function renderSVG(bar,options){
    lines.push('<path d="M'+fmt(x0)+' '+fmt(y0)+'L'+fmt(x1)+' '+fmt(y1)+'" stroke="#242528" stroke-width="'+(c.editor?6.7:5.1)+'" stroke-linecap="butt"/>');
   });
  }
+ // Dibujar nombres después de figuras y barras para máxima legibilidad.
+ for(var li=0;li<noteLabels.length;li++){
+  var label=noteLabels[li];
+  lines.push('<text x="'+fmt(label.x)+'" y="'+fmt(label.y)+'" font-size="'+c.nameSize+'" font-family="Arial,sans-serif" font-weight="900" text-anchor="middle" fill="#c32a37" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke fill">'+esc(label.name)+'</text>');
+ }
  return{markup:lines.join(''),config:c,groups:z.beams};
 }
 function figureIcon(kind,duration){
@@ -208,7 +212,7 @@ function figureIcon(kind,duration){
 }
 /* Canvas exporter: misma geometría que el SVG (incluidos los grupos de barras). */
 function drawCanvas(context,bar,options){
- var o=options||{},eng=notesLayout(bar,o),c=eng.c,ctx=context;
+ var o=options||{},eng=notesLayout(bar,o),c=eng.c,ctx=context,canvasLabels=[];
  ctx.save();ctx.translate(o.x||0,o.y||0);
  ctx.scale((o.drawWidth||c.width)/c.width,(o.drawHeight||c.height)/c.height);
  ctx.strokeStyle='#24262a';ctx.fillStyle='#242528';ctx.lineCap='butt';
@@ -248,9 +252,8 @@ function drawCanvas(context,bar,options){
    if(nt.dotted){ctx.beginPath();ctx.arc(x+20,ry-3,3.2,0,Math.PI*2);ctx.fill();}
    continue;
   }
-  var name=String(nt.pitch||'E4').replace(/#/g,'♯').replace(/b/g,'♭'),lbl=c.nameY;
-  if(j&&Math.abs(it.time-eng.events[j-1].time)<.75&&j%2)lbl+=c.editor?28:24;
-  ctx.font='900 '+c.nameSize+'px Arial,sans-serif';ctx.textAlign='center';ctx.fillStyle='#c32a37';ctx.fillText(name,x,lbl);
+  var name=String(nt.pitch||'E4').replace(/\d+$/,'').replace(/#/g,'♯').replace(/b/g,'♭'),lbl=c.nameY;
+  canvasLabels.push({x:x,y:lbl,name:name});
   ctx.strokeStyle='#24262a';ctx.lineWidth=1.8;
   for(var below=c.top+5*c.space;below<=y+2;below+=c.space){ctx.beginPath();ctx.moveTo(x-c.rx-6,below);ctx.lineTo(x+c.rx+6,below);ctx.stroke();}
   for(var above=c.top-c.space;above>=y-2;above-=c.space){ctx.beginPath();ctx.moveTo(x-c.rx-6,above);ctx.lineTo(x+c.rx+6,above);ctx.stroke();}
@@ -282,6 +285,13 @@ function drawCanvas(context,bar,options){
   extraBeams(gr,c,function(x0,y0,x1,y1){
    ctx.lineWidth=c.editor?6.7:5.1;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
   });
+ }
+ // Exportar nombres encima de todas las plicas y barras en JPG también.
+ for(var li=0;li<canvasLabels.length;li++){
+  var label=canvasLabels[li];
+  ctx.font='900 '+c.nameSize+'px Arial,sans-serif';ctx.textAlign='center';
+  ctx.lineJoin='round';ctx.lineWidth=5;ctx.strokeStyle='#fff';ctx.strokeText(label.name,label.x,label.y);
+  ctx.fillStyle='#c32a37';ctx.fillText(label.name,label.x,label.y);
  }
  ctx.restore();
 }
