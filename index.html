@@ -126,6 +126,72 @@
 /* Pentagrama y notas: no interceptar los dos dedos en modo hoja. */
 #chart-screen .staff-in-bar svg{pointer-events:none}
 </style>
+<style id="mis-charts-v24-style">
+/* Edición y Preview: etiquetas con tamaño idéntico; sin escala de la botonera. */
+#chart-screen .section-label,
+#chart-screen .section-label.section-label-long,
+#chart-screen.preview-mode .section-label,
+#chart-screen.preview-mode .section-label.section-label-long{
+ font-size:var(--live-section-font,18px)!important;
+ font-weight:900!important;line-height:1.06!important;
+ white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;
+ color:#c92335!important;letter-spacing:-.5px!important;
+}
+#chart-screen .chart-toolbar,#chart-screen .chart-toolbar *{
+ -webkit-font-smoothing:auto;text-rendering:optimizeLegibility;
+ filter:none!important;backdrop-filter:none!important;
+}
+#chart-screen .chart-toolbar{transform:none!important;-webkit-transform:none!important}
+/* Editor de partituras: doble escala, desplazamiento real para ver todo el compás. */
+#staff-screen .staff-kicker,#staff-screen .staff-intro{display:none!important}
+#staff-screen .staff-editor-main{padding-top:12px!important}
+#staff-screen .staff-scroll{
+ display:block;width:100%;overflow-x:auto!important;overflow-y:hidden!important;
+ -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+ touch-action:pan-x!important;scrollbar-width:thin;
+ border-radius:9px;
+}
+#staff-screen #staff-svg{
+ display:block;width:1260px!important;min-width:1260px!important;max-width:none!important;
+ height:auto!important;touch-action:pan-x!important;cursor:crosshair;overflow:visible;
+}
+#staff-screen #staff-svg .staff-note-hit{touch-action:none!important;cursor:grab}
+#staff-screen #staff-svg .staff-note-hit.selected-note ellipse{
+ stroke:#c92335!important;stroke-width:4!important;
+}
+#staff-screen #staff-svg .staff-note-hit.selected-note text{fill:#a61d2b!important}
+#staff-screen .staff-tile{padding:10px!important}
+#staff-screen .duration-palette{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px!important}
+#staff-screen .duration-chip{
+ min-width:0!important;margin:0!important;padding:7px 2px!important;
+ display:flex;align-items:center;flex-direction:column;justify-content:center;
+ gap:2px;font-weight:800;font-size:10px!important;
+ border-radius:11px;white-space:nowrap;min-height:93px;
+}
+#staff-screen .duration-chip .duration-glyph{display:block;width:38px;height:52px;color:inherit;line-height:1}
+#staff-screen .duration-chip .duration-glyph svg{display:block;width:38px;height:52px}
+#staff-screen .staff-rest-heading{margin-top:17px!important}
+#staff-screen .staff-dotted-row{display:flex;align-items:center;gap:12px;margin:13px 0 5px}
+#staff-screen .staff-dotted-row span{flex:1;font-size:11px;line-height:1.35;color:#73757e}
+#staff-screen #staff-dot{padding:10px 14px;border:1px solid #d8d9df;border-radius:10px;font-weight:800;background:#fff;color:#141414;white-space:nowrap}
+#staff-screen #staff-dot.active{background:#d62c37;color:#fff;border-color:#d62c37}
+#staff-screen .staff-head{gap:5px}
+#staff-screen .staff-head strong{font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#staff-screen .editor-switch,#editor-screen .editor-switch{
+ font-size:12px;font-weight:800;white-space:nowrap;
+ padding:10px 10px;border:1px solid #d3d5da;border-radius:11px;background:#fff;color:#17181b;
+}
+#staff-screen .staff-head .done,#editor-screen .editor-top .done{padding:9px 12px;font-size:13px}
+#editor-screen .editor-top{gap:5px}
+#editor-screen .editor-top strong{font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#staff-screen .staff-bottom-hint{font-size:12px;line-height:1.35;color:#757680;margin:14px 0}
+@media(max-width:390px){
+ #staff-screen #staff-svg{width:1200px!important;min-width:1200px!important}
+ #staff-screen .duration-chip{font-size:9px!important}
+ #staff-screen .staff-head strong,#editor-screen .editor-top strong{font-size:12px}
+ #staff-screen .editor-switch,#editor-screen .editor-switch{font-size:11px;padding:9px 7px}
+}
+</style>
 </head>
 <body>
 <div id="app">
