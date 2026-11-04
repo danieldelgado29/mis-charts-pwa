@@ -1,7 +1,8 @@
 /* Mis Charts v2.4 — grabado rítmico compartido entre edición y hoja. */
 (function(global){
 'use strict';
-var D={whole:4,half:2,quarter:1,eighth:.5,sixteenth:.25};
+var D={whole:4,half:2,quarter:1,eighth:.5,sixteenth:.25,thirtysecond:.125,sixtyfourth:.0625};
+function flagCount(e){return ({eighth:1,sixteenth:2,thirtysecond:3,sixtyfourth:4})[e&&e.duration]||0;}
 function type(e){return e&&e.kind==='rest'?'rest':'note';}
 function length(e){return (D[e&&e.duration]||1)*(e&&e.dotted?1.5:1);}
 function time(e,i){return typeof e.time==='number'&&isFinite(e.time)?e.time:i;}
@@ -14,7 +15,7 @@ function clusters(events,meter){
  var groups=[],run=[];
  function finish(){if(run.length>=2)groups.push(run.slice());run=[];}
  for(var i=0;i<events.length;i++){
-  var x=events[i],e=x.note,elig=type(e)==='note'&&(e.duration==='eighth'||e.duration==='sixteenth');
+  var x=events[i],e=x.note,elig=type(e)==='note'&&flagCount(e)>0;
   if(!elig){finish();continue;}
   if(run.length){
    var last=run[run.length-1];
@@ -60,7 +61,26 @@ function groupMap(ev,c){
  return{groups:groups,lookup:lookup};
 }
 function beamY(gr,x){return gr.yBase+gr.slope*(x-gr.pts[0].x)/gr.span;}
-function isShort(e){return e.duration==='eighth'||e.duration==='sixteenth';}
+function isShort(e){return flagCount(e)>0;}
+function extraBeams(group,c,draw){
+ var off=group.up?c.rx-1:-c.rx+1,sign=group.up?1:-1;
+ for(var lev=2;lev<=4;lev++){
+  for(var i=0;i<group.items.length;i++){
+   var it=group.items[i],nt=it.note;
+   if(flagCount(nt)<lev)continue;
+   var after=group.items[i+1],before=group.items[i-1];
+   var join=after&&flagCount(after.note)>=lev&&Math.abs(after.time-it.time-length(nt))<.011;
+   var x0=pointX(nt,it.index,c),x1;
+   if(join)x1=pointX(after.note,after.index,c);
+   else if(before&&flagCount(before.note)>=lev)continue;
+   else{
+    var nb=after||before;
+    x1=x0+(nb&&nb.time<it.time?-1:1)*Math.min(22,(c.right-c.left)/c.pulses*.2);
+   }
+   draw(x0+off,beamY(group,x0)+sign*10*(lev-1),x1+off,beamY(group,x1)+sign*10*(lev-1));
+  }
+ }
+}
 function notesLayout(bar,options){
  var c=cfg(options),ev=items(bar),g=groupMap(ev,c);
  return{c:c,events:ev,beams:g.groups,beamLookup:g.lookup};
@@ -116,7 +136,7 @@ function renderSVG(bar,options){
    }else if(dur==='quarter'){
     lines.push('<path d="M'+fmt(x+3)+' '+fmt(restY-28)+'l-10 20 12 8-11 18 9 11-8 6 3-12-12-12 11-18-11-9Z" fill="#242528"/>');
    }else{
-    var count=dur==='sixteenth'?2:1;
+    var count=flagCount({duration:dur});
     lines.push('<path d="M'+fmt(x+8)+' '+fmt(restY-25)+'l-13 55" stroke="#242528" stroke-width="3.5" fill="none"/>');
     for(var dots=0;dots<count;dots++){
      var dy=restY-22+dots*15;
@@ -134,7 +154,7 @@ function renderSVG(bar,options){
     var stemX=x+(up?c.rx-1:-c.rx+1),end=gr?beamY(gr,x):y+(up?-c.stem:c.stem);
     lines.push('<path d="M'+fmt(stemX)+' '+fmt(y)+'V'+fmt(end)+'" stroke="#242528" stroke-width="'+(c.editor?3.1:2.5)+'" fill="none"/>');
     if(isShort(nt)&&!gr){
-     var dir=up?1:-1,fl=nt.duration==='sixteenth'?2:1;
+     var dir=up?1:-1,fl=flagCount(nt);
      for(var flg=0;flg<fl;flg++){
       var at=end+(up?flg*12:-flg*12);
       lines.push('<path d="M'+fmt(stemX)+' '+fmt(at)+'q'+fmt(14*dir)+' '+fmt(7*dir)+' '+fmt(10*dir)+' '+fmt(25*dir)+'" stroke="#242528" stroke-width="'+(c.editor?3.2:2.5)+'" fill="none"/>');
@@ -152,20 +172,9 @@ function renderSVG(bar,options){
   var offset=group.up?c.rx-1:-c.rx+1,secondary=group.up?10:-10;
   var y0=beamY(group,first.x),y1=beamY(group,last.x);
   lines.push('<path d="M'+fmt(first.x+offset)+' '+fmt(y0)+'L'+fmt(last.x+offset)+' '+fmt(y1)+'" stroke="#242528" stroke-width="'+(c.editor?7.5:5.8)+'" fill="none" stroke-linecap="butt"/>');
-  for(var a=0;a<group.items.length;a++){
-   var item=group.items[a],nt=item.note;
-   if(nt.duration!=='sixteenth')continue;
-   var next=group.items[a+1],prev=group.items[a-1],join=next&&next.note.duration==='sixteenth'&&Math.abs(next.time-item.time-length(nt))<.011;
-   var x0=pointX(nt,item.index,c),x1;
-   if(join)x1=pointX(next.note,next.index,c);
-   else if(prev&&prev.note.duration==='sixteenth')continue;
-   else{
-    // Barra parcial cuando solo una semicorchea acompaña a una corchea.
-    var neighbor=next||prev;
-    x1=x0+((neighbor&&neighbor.time<item.time)?-1:1)*Math.min(22,c.pulses?((c.right-c.left)/c.pulses)*.2:20);
-   }
-   lines.push('<path d="M'+fmt(x0+offset)+' '+fmt(beamY(group,x0)+secondary)+'L'+fmt(x1+offset)+' '+fmt(beamY(group,x1)+secondary)+'" stroke="#242528" stroke-width="'+(c.editor?6.7:5.1)+'" stroke-linecap="butt"/>');
-  }
+  extraBeams(group,c,function(x0,y0,x1,y1){
+   lines.push('<path d="M'+fmt(x0)+' '+fmt(y0)+'L'+fmt(x1)+' '+fmt(y1)+'" stroke="#242528" stroke-width="'+(c.editor?6.7:5.1)+'" stroke-linecap="butt"/>');
+  });
  }
  return{markup:lines.join(''),config:c,groups:z.beams};
 }
@@ -180,9 +189,9 @@ function figureIcon(kind,duration){
    p.push('<path d="M32 11L23 27L35 37L24 51L32 58L20 49L29 37L17 27L28 11Z" fill="currentColor"/>');
   }else{
    p.push('<path d="M39 14L27 59" stroke="currentColor" stroke-width="3.5" fill="none"/>');
-   for(var y=0;y<(duration==='sixteenth'?2:1);y++){
-    p.push('<circle cx="20" cy="'+(20+y*16)+'" r="5.5" fill="currentColor"/>');
-    p.push('<path d="M21 '+(24+y*16)+'Q31 '+(32+y*16)+' 37 '+(21+y*16)+'" stroke="currentColor" stroke-width="3.2" fill="none"/>');
+   for(var y=0;y<flagCount({duration:duration});y++){
+    p.push('<circle cx="20" cy="'+(18+y*11)+'" r="5.5" fill="currentColor"/>');
+    p.push('<path d="M21 '+(22+y*11)+'Q31 '+(30+y*11)+' 37 '+(19+y*11)+'" stroke="currentColor" stroke-width="3.2" fill="none"/>');
    }
   }
  }else{
@@ -190,9 +199,8 @@ function figureIcon(kind,duration){
   p.push('<ellipse cx="20" cy="48" rx="'+(whole?14:11)+'" ry="'+(whole?7:7.4)+'" transform="rotate(-18 20 48)" fill="'+fill+'" stroke="currentColor" stroke-width="3"/>');
   if(!whole){
    p.push('<path d="M30 47V10" stroke="currentColor" stroke-width="3.2" fill="none"/>');
-   if(duration==='eighth'||duration==='sixteenth'){
-    p.push('<path d="M30 10Q51 21 38 41" stroke="currentColor" stroke-width="3.4" fill="none"/>');
-    if(duration==='sixteenth')p.push('<path d="M30 21Q51 33 38 51" stroke="currentColor" stroke-width="3.4" fill="none"/>');
+   if(flagCount({duration:duration})>0){
+    for(var f=0;f<flagCount({duration:duration});f++)p.push('<path d="M30 '+(10+f*10)+'Q51 '+(21+f*10)+' 38 '+(41+f*10)+'" stroke="currentColor" stroke-width="3.4" fill="none"/>');
    }
   }
  }
@@ -232,7 +240,7 @@ function drawCanvas(context,bar,options){
     ctx.beginPath();ctx.moveTo(x+3,ry-28);ctx.lineTo(x-7,ry-8);ctx.lineTo(x+5,ry);ctx.lineTo(x-6,ry+18);ctx.lineTo(x+3,ry+29);ctx.lineTo(x-8,ry+35);ctx.lineTo(x-5,ry+23);ctx.lineTo(x-17,ry+11);ctx.lineTo(x-6,ry-7);ctx.lineTo(x-17,ry-16);ctx.lineTo(x-6,ry-28);ctx.closePath();ctx.fill();
    }else{
     ctx.lineWidth=3.5;ctx.beginPath();ctx.moveTo(x+8,ry-25);ctx.lineTo(x-5,ry+30);ctx.stroke();
-    for(var k=0;k<(d==='sixteenth'?2:1);k++){
+    for(var k=0;k<flagCount({duration:d});k++){
      ctx.beginPath();ctx.arc(x-6,ry-22+k*15,5.5,0,Math.PI*2);ctx.fill();
      ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-5,ry-19+k*15);ctx.quadraticCurveTo(x+7,ry-13+k*15,x+10,ry-20+k*15);ctx.stroke();
     }
@@ -257,7 +265,7 @@ function drawCanvas(context,bar,options){
    ctx.strokeStyle='#242528';ctx.lineWidth=c.editor?3.1:2.5;ctx.beginPath();ctx.moveTo(sx,y);ctx.lineTo(sx,end);ctx.stroke();
    if(isShort(nt)&&!gr){
     var dir=up?1:-1;
-    for(var k=0;k<(nt.duration==='sixteenth'?2:1);k++){
+    for(var k=0;k<flagCount(nt);k++){
      var fy=end+(up?k*12:-k*12);
      ctx.lineWidth=c.editor?3.2:2.5;ctx.beginPath();ctx.moveTo(sx,fy);
      ctx.quadraticCurveTo(sx+14*dir,fy+7*dir,sx+10*dir,fy+25*dir);ctx.stroke();
@@ -271,20 +279,9 @@ function drawCanvas(context,bar,options){
   ctx.strokeStyle='#242528';ctx.lineWidth=c.editor?7.5:5.8;
   ctx.beginPath();ctx.moveTo(first.x+offset,beamY(gr,first.x));ctx.lineTo(last.x+offset,beamY(gr,last.x));ctx.stroke();
   var sec=gr.up?10:-10;
-  for(var a=0;a<gr.items.length;a++){
-   var item=gr.items[a],nt=item.note;
-   if(nt.duration!=='sixteenth')continue;
-   var nx=gr.items[a+1],pv=gr.items[a-1],join=nx&&nx.note.duration==='sixteenth'&&Math.abs(nx.time-item.time-length(nt))<.011;
-   var x0=pointX(nt,item.index,c),x1;
-   if(join)x1=pointX(nx.note,nx.index,c);
-   else if(pv&&pv.note.duration==='sixteenth')continue;
-   else{
-    var neighbor=nx||pv,step=neighbor&&neighbor.time<item.time?-1:1;
-    x1=x0+step*Math.min(22,((c.right-c.left)/c.pulses)*.2);
-   }
-   ctx.lineWidth=c.editor?6.7:5.1;ctx.beginPath();
-   ctx.moveTo(x0+offset,beamY(gr,x0)+sec);ctx.lineTo(x1+offset,beamY(gr,x1)+sec);ctx.stroke();
-  }
+  extraBeams(gr,c,function(x0,y0,x1,y1){
+   ctx.lineWidth=c.editor?6.7:5.1;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+  });
  }
  ctx.restore();
 }
