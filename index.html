@@ -42,7 +42,7 @@
 </style>
 <style id="mis-charts-v22-style">
 /* v2.2 — colores neutros en los botones; rojo solo en Preview y Deshacer. */
-#chart-screen .chart-toolbar .quick-tools-row>button:not(#preview-button):not(#chart-undo),
+#chart-screen .chart-toolbar .quick-tools-row>button,
 #chart-screen .chart-toolbar .advanced-tools button:not(.hide){
  background:#fff!important;color:#151619!important;border-color:#d5d6db!important;
 }
@@ -87,6 +87,8 @@
  color:#cb2533!important;padding-right:3px!important;text-overflow:clip;
 }
 #chart-screen .section-label.section-label-long{font-size:19px!important;letter-spacing:-.6px!important}
+#chart-screen.preview-mode .section-label{font-size:25px!important;font-weight:950!important}
+#chart-screen.preview-mode .section-label.section-label-long{font-size:19px!important}
 #chart-screen .staff-in-bar{width:100%;height:100%;display:block;flex:1 1 100%;min-width:0}
 #chart-screen .staff-in-bar svg{width:100%;height:100%;display:block}
 @media(max-width:365px){
