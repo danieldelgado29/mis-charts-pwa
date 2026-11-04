@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.6.0">
-<link rel="stylesheet" href="styles.css?v=2.6.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.7.0">
+<link rel="stylesheet" href="styles.css?v=2.7.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -282,6 +282,32 @@
 #staff-screen .staff-scroll{margin-top:0!important;margin-bottom:0!important}
 </style>
 
+<style id="mis-charts-v27-chords">
+/* Letras de acordes igual de grandes que la etiqueta de sección durante la edición.
+   La escala se calcula por canción; Preview no cambia. */
+#chart-screen:not(.preview-mode) .bar-item .chord-token,
+#chart-screen:not(.preview-mode) .bar-item .chord-flow.rhythm-flow .beat-chord{
+ font-size:var(--edit-chord-size,36px)!important;
+ font-weight:900!important;
+ line-height:1.08!important;
+ letter-spacing:-.02em;
+ text-align:center!important;
+ white-space:nowrap!important;
+ text-overflow:clip!important;
+}
+#chart-screen:not(.preview-mode) .bar-item .chord-token.empty{
+ font-weight:600!important;
+ color:#89898e!important;
+}
+#chart-screen:not(.preview-mode) .bar-item .chord-flow.rhythm-flow{
+ align-items:center!important;justify-content:center!important;
+ min-height:1.2em!important;
+}
+/* No aumentar las barras de separación más allá del renglón. */
+#chart-screen:not(.preview-mode) .bar-item:not(.staff-row-bar){
+ align-items:center!important;
+}
+</style>
 </head>
 <body>
 <div id="app">
@@ -289,7 +315,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.6.0 · actualización de caché</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.7.0 · actualización de caché</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -419,6 +445,6 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="notation-v24.js?v=2.6.0"></script>
-<script src="app.js?v=2.6.0"></script>
+<script src="notation-v24.js?v=2.7.0"></script>
+<script src="app.js?v=2.7.0"></script>
 </body></html>
