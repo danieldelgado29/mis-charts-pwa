@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Mis Charts">
+<meta name="description" content="Charts musicales offline con editor por botones">
+<link rel="apple-touch-icon" href="icons/icon180.png">
+<link rel="icon" href="icons/icon192.png">
+<link rel="manifest" href="manifest.webmanifest?v=2.5.0">
+<link rel="stylesheet" href="styles.css?v=2.5.0">
+<title>Mis Charts · Editor musical</title>
+<style id="mis-charts-v21-style">
+#chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
+#chart-screen .chart-toolbar{padding:6px 7px 4px;flex:0 0 auto;max-width:none}
+#chart-screen .quick-tools-row{display:flex;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;margin-bottom:3px}
+#chart-screen .quick-tools-row>button,#chart-screen .quick-tools-row>select{flex:0 0 auto;margin:0;border:1px solid #dddde2;border-radius:8px;background:#fff;color:#c52936;padding:7px 9px;font-size:12px;font-weight:800;min-height:34px}
+#chart-screen .quick-tools-row .back{width:35px;height:35px;padding:0;font-size:30px;border-radius:50%}
+#chart-screen .quick-tools-row select{max-width:90px;color:#202127}
+#chart-screen .primary-tools #preview-button{margin-left:auto;background:#d72d37;color:#fff}
+#chart-screen .secondary-tools #tools-toggle{margin-left:auto;background:#e7e7ec;color:#25272b}
+#chart-screen .advanced-tools{max-height:31dvh;overflow:auto;padding:5px 0}
+#chart-screen .advanced-tools .tool-rows{display:flex;flex-wrap:wrap;gap:5px}
+#chart-screen .advanced-tools button{border:1px solid #dddde2;border-radius:9px;background:#fff;color:#b52c39;min-height:34px;padding:6px 9px;font-weight:750;font-size:12px}
+#chart-screen .advanced-tools button.active{background:#d72d37;color:#fff}
+#chart-screen:not(.preview-mode) .paper-scroll{height:auto!important;min-height:0!important;flex:1 1 auto!important;padding:8px 6px!important;overflow:auto}
+#chart-screen .staff-in-bar,#chart-screen .staff-in-bar svg{display:block;width:100%;height:100%}
+#chart-screen .section-label{font-size:18px!important;font-weight:900!important}
+#chart-screen.preview-mode .section-label{font-size:max(18px,var(--show-section-size,18px))!important}
+#chart-screen.preview-mode .preview-export{background:#d72d37;color:#fff;min-width:70px}
+.jpg-sheet{position:fixed;z-index:120;inset:0;background:#121319dd;padding:14px;display:flex;align-items:center;justify-content:center}
+.jpg-sheet.hide{display:none!important}
+.jpg-box{background:white;border-radius:16px;padding:13px;max-width:680px;max-height:96dvh;overflow:auto;width:100%;text-align:center}
+.jpg-box p{font-size:12px;color:#65666d}
+.jpg-box img{display:block;max-width:100%;max-height:67dvh;margin:auto;-webkit-user-select:auto}
+.jpg-box>div{display:flex;justify-content:center;gap:9px;margin-top:10px}
+.jpg-box button{padding:10px;border:1px solid #ddd;border-radius:9px;background:#fff;font-weight:800}
+.jpg-box #jpg-download{background:#d72d37;color:#fff}
+</style>
+<style id="mis-charts-v22-style">
+/* v2.2 — colores neutros en los botones; rojo solo en Preview y Deshacer. */
+#chart-screen .chart-toolbar .quick-tools-row>button,
+#chart-screen .chart-toolbar .advanced-tools button:not(.hide){
+ background:#fff!important;color:#151619!important;border-color:#d5d6db!important;
+}
+#chart-screen .chart-toolbar .quick-tools-row>select{background:#fff!important;color:#151619!important}
+#chart-screen .chart-toolbar .quick-tools-row #preview-button{
+ background:#d72d37!important;color:#fff!important;border-color:#d72d37!important;
+}
+#chart-screen .chart-toolbar .quick-tools-row #chart-undo{
+ background:#fff!important;color:#d72d37!important;border-color:#d7d9df!important;
+}
+/* Cada acción relevante está disponible sin abrir Herramientas. */
+#chart-screen .chart-toolbar .quick-tools-row.action-tools{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.25fr) minmax(0,1.1fr) minmax(0,.86fr) 40px 40px 40px;
+ gap:4px;overflow:visible!important;width:100%;margin-top:3px;
+}
+#chart-screen .chart-toolbar .quick-tools-row.action-tools>button{
+ box-sizing:border-box;width:100%;min-width:0;min-height:40px;padding:5px 3px;
+ display:flex;align-items:center;justify-content:center;
+ font-size:11px;font-weight:850;white-space:nowrap;
+}
+#chart-screen .chart-toolbar #paste-clipboard:disabled{color:#92949c!important;background:#e6e7eb!important}
+#chart-screen .chart-toolbar .symbol-only,#chart-screen .chart-toolbar .undo-icon{
+ width:40px;height:40px;min-width:40px;min-height:40px;padding:5px!important;
+ border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+#chart-screen .chart-toolbar .symbol-only svg,
+#chart-screen .chart-toolbar .undo-icon svg{display:block;width:29px;height:29px;flex:0 0 29px}
+#chart-screen .chart-toolbar .symbol-only svg path,
+#chart-screen .chart-toolbar .symbol-only svg line,
+#chart-screen .chart-toolbar .symbol-only svg circle{vector-effect:non-scaling-stroke}
+#chart-screen .chart-toolbar .advanced-tools .symbol-only{min-width:45px;width:45px;min-height:41px}
+#chart-screen .chart-toolbar .advanced-tools .symbol-only svg{width:29px;height:29px}
+#chart-screen .chart-toolbar .quick-tools-row .score-symbol.active,
+#chart-screen .chart-toolbar .advanced-tools .score-symbol.active{
+ background:#e0f5e7!important;border-color:#69b889!important;color:#111!important;
+}
+/* Etiquetas rojas: altas y gruesas como los separadores de los compases. */
+#chart-screen .section-label{
+ font-size:25px!important;font-weight:950!important;line-height:1.0!important;
+ letter-spacing:-.7px!important;display:flex;align-items:center;
+ color:#cb2533!important;padding-right:3px!important;text-overflow:clip;
+}
+#chart-screen .section-label.section-label-long{font-size:19px!important;letter-spacing:-.6px!important}
+#chart-screen.preview-mode .section-label{font-size:25px!important;font-weight:950!important}
+#chart-screen.preview-mode .section-label.section-label-long{font-size:19px!important}
+#chart-screen .staff-in-bar{width:100%;height:100%;display:block;flex:1 1 100%;min-width:0}
+#chart-screen .staff-in-bar svg{width:100%;height:100%;display:block}
+@media(max-width:365px){
+ #chart-screen .chart-toolbar .quick-tools-row.action-tools{grid-template-columns:minmax(0,1fr) minmax(0,.95fr) minmax(0,.72fr) 36px 36px 36px;gap:3px}
+ #chart-screen .chart-toolbar .quick-tools-row.action-tools>button{font-size:10px;min-height:38px}
+ #chart-screen .chart-toolbar .symbol-only svg,#chart-screen .chart-toolbar .undo-icon svg{width:27px;height:27px}
+}
+</style>
+<style id="mis-charts-v23-style">
+/* 2.3 — Secciones al MISMO tamaño que los acordes; se conserva el rojo. */
+#chart-screen .section-label,#chart-screen .section-label.section-label-long{
+ font-size:18px!important;font-weight:900!important;letter-spacing:-.5px!important;
+ line-height:1.06!important;color:#c92335!important;
+ overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;
+ display:flex;align-items:center;
+}
+#chart-screen.preview-mode .section-label,
+#chart-screen.preview-mode .section-label.section-label-long{
+ font-size:var(--show-chord-size,18px)!important;font-weight:900!important;
+ line-height:1.06!important;letter-spacing:-.8px!important;
+}
+#chart-screen:not(.preview-mode) .bar-item .chord-token{font-size:18px!important}
+/* Pellizco: un dedo desplaza la hoja, dos dedos cambian el zoom de la hoja. */
+#chart-screen #paper-scroll{
+ touch-action:pan-x pan-y;overscroll-behavior:contain;
+ overflow:auto!important;
+}
+#chart-screen.preview-mode #paper-scroll{
+ justify-content:flex-start!important;align-items:flex-start!important;
+ overflow:auto!important;
+}
+#chart-screen.preview-mode #page-scaler{
+ margin:auto!important;flex-shrink:0!important;max-width:none!important;
+}
+/* Pentagrama y notas: no interceptar los dos dedos en modo hoja. */
+#chart-screen .staff-in-bar svg{pointer-events:none}
+</style>
+<style id="mis-charts-v24-style">
+/* Edición y Preview: etiquetas con tamaño idéntico; sin escala de la botonera. */
+#chart-screen .section-label,
+#chart-screen .section-label.section-label-long,
+#chart-screen.preview-mode .section-label,
+#chart-screen.preview-mode .section-label.section-label-long{
+ font-size:var(--live-section-font,18px)!important;
+ font-weight:900!important;line-height:1.06!important;
+ white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;
+ color:#c92335!important;letter-spacing:-.5px!important;
+}
+#chart-screen .chart-toolbar,#chart-screen .chart-toolbar *{
+ -webkit-font-smoothing:auto;text-rendering:optimizeLegibility;
+ filter:none!important;backdrop-filter:none!important;
+}
+#chart-screen .chart-toolbar{transform:none!important;-webkit-transform:none!important}
+/* Editor de partituras: doble escala, desplazamiento real para ver todo el compás. */
+#staff-screen .staff-kicker,#staff-screen .staff-intro{display:none!important}
+#staff-screen .staff-editor-main{padding-top:12px!important}
+#staff-screen .staff-scroll{
+ display:block;width:100%;overflow-x:auto!important;overflow-y:hidden!important;
+ -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+ touch-action:pan-x!important;scrollbar-width:thin;
+ border-radius:9px;
+}
+#staff-screen #staff-svg{
+ display:block;width:1260px!important;min-width:1260px!important;max-width:none!important;
+ height:auto!important;touch-action:pan-x!important;cursor:crosshair;overflow:visible;
+}
+#staff-screen #staff-svg .staff-note-hit{touch-action:none!important;cursor:grab}
+#staff-screen #staff-svg .staff-note-hit.selected-note ellipse{
+ stroke:#c92335!important;stroke-width:4!important;
+}
+#staff-screen #staff-svg .staff-note-hit.selected-note text{fill:#a61d2b!important}
+#staff-screen .staff-tile{padding:10px!important}
+#staff-screen .duration-palette{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px!important}
+#staff-screen .duration-chip{
+ min-width:0!important;margin:0!important;padding:7px 2px!important;
+ display:flex;align-items:center;flex-direction:column;justify-content:center;
+ gap:2px;font-weight:800;font-size:10px!important;
+ border-radius:11px;white-space:nowrap;min-height:93px;
+}
+#staff-screen .duration-chip .duration-glyph{display:block;width:38px;height:52px;color:inherit;line-height:1}
+#staff-screen .duration-chip .duration-glyph svg{display:block;width:38px;height:52px}
+#staff-screen .staff-rest-heading{margin-top:17px!important}
+#staff-screen .staff-dotted-row{display:flex;align-items:center;gap:12px;margin:13px 0 5px}
+#staff-screen .staff-dotted-row span{flex:1;font-size:11px;line-height:1.35;color:#73757e}
+#staff-screen #staff-dot{padding:10px 14px;border:1px solid #d8d9df;border-radius:10px;font-weight:800;background:#fff;color:#141414;white-space:nowrap}
+#staff-screen #staff-dot.active{background:#d62c37;color:#fff;border-color:#d62c37}
+#staff-screen .staff-head{gap:5px}
+#staff-screen .staff-head strong{font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#staff-screen .editor-switch,#editor-screen .editor-switch{
+ font-size:12px;font-weight:800;white-space:nowrap;
+ padding:10px 10px;border:1px solid #d3d5da;border-radius:11px;background:#fff;color:#17181b;
+}
+#staff-screen .staff-head .done,#editor-screen .editor-top .done{padding:9px 12px;font-size:13px}
+#editor-screen .editor-top{gap:5px}
+#editor-screen .editor-top strong{font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#staff-screen .staff-bottom-hint{font-size:12px;line-height:1.35;color:#757680;margin:14px 0}
+@media(max-width:390px){
+ #staff-screen #staff-svg{width:1200px!important;min-width:1200px!important}
+ #staff-screen .duration-chip{font-size:9px!important}
+ #staff-screen .staff-head strong,#editor-screen .editor-top strong{font-size:12px}
+ #staff-screen .editor-switch,#editor-screen .editor-switch{font-size:11px;padding:9px 7px}
+}
+</style>
+<style id="mis-charts-v24-extra">
+#staff-screen .staff-more-values{margin:14px 0 10px;border:1px solid #dedee4;background:#fff;border-radius:11px;padding:10px}
+#staff-screen .staff-more-values summary{color:#292a2e;font-size:13px;font-weight:800;cursor:pointer}
+#staff-screen .staff-more-values[open] summary{margin-bottom:12px}
+#staff-screen .staff-more-values .staff-palette-head{margin-top:10px}
+</style>
+<style id="mis-charts-v25-sharp">
+/* Evitar que la barra de herramientas comparta la capa escalada de la hoja. */
+#chart-screen{isolation:isolate}
+#chart-screen .chart-toolbar{
+ position:relative!important;z-index:8!important;flex-shrink:0!important;
+ background:#f4f4f7!important;
+ filter:none!important;-webkit-filter:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;-webkit-transform:none!important;
+ perspective:none!important;-webkit-perspective:none!important;
+ opacity:1!important;isolation:isolate;contain:paint;
+ text-rendering:geometricPrecision;
+}
+#chart-screen .chart-toolbar button,
+#chart-screen .chart-toolbar select,
+#chart-screen .chart-toolbar .quick-tools-row{
+ filter:none!important;-webkit-filter:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;-webkit-transform:none!important;
+ opacity:1!important;text-rendering:geometricPrecision;
+}
+#chart-screen .chart-toolbar button:disabled{opacity:.45!important}
+#chart-screen .chart-toolbar.toolbar-repaint{contain:layout paint;}
+/* Edición: la hoja se escala sola; los controles mantienen tamaño y bordes enteros. */
+#chart-screen #paper-scroll{position:relative;z-index:0}
+</style>
+</head>
+<body>
+<div id="app">
+<section class="screen screen-dark" id="home-screen">
+  <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
+    <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
+    <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.5.0 · actualización de caché</small></div>
+</section>
+<section class="screen screen-dark hide" id="new-screen">
+  <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
+  <form id="new-form" class="new-form"><div class="eyebrow">DATOS DEL TEMA</div><h2>Empezar.</h2>
+  <label>Nombre del tema<input id="song-title" type="text" required maxlength="90" autocomplete="off" placeholder="Nombre de la canción"></label>
+  <label>Artista<input id="song-artist" type="text" maxlength="90" autocomplete="off" placeholder="Artista"></label>
+  <label>Métrica<select id="song-meter"><option>4/4</option><option>2/4</option><option>3/4</option><option>5/4</option><option>6/4</option><option>7/4</option><option>2/2</option><option>3/8</option><option>5/8</option><option>6/8</option><option>7/8</option><option>9/8</option><option>12/8</option></select></label>
+  <button type="submit" class="wide hot">INICIAR →</button></form>
+</section>
+<section class="screen screen-dark hide" id="library-screen">
+  <header class="top dark-top"><button id="library-back" class="back">‹</button><strong>Mis charts guardados</strong><button id="import-button" class="text-button">Importar</button></header>
+  <div class="library-main"><div class="eyebrow">EN ESTE DISPOSITIVO</div><div id="library-list"></div><p class="quiet">El almacenamiento es local a este navegador. Exporta respaldos JSON regularmente: borrar datos de Safari puede eliminar tus charts.</p></div>
+  <input type="file" id="import-file" accept=".json,application/json" class="hide">
+</section>
+<section class="screen screen-light hide" id="chart-screen">
+<div class="chart-toolbar">
+ <div class="quick-tools-row primary-tools">
+  <button id="chart-back" class="back" type="button" aria-label="Volver a mis charts">‹</button>
+  <select id="section-kind" aria-label="Tipo de sección"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select>
+  <button id="section-plus" class="hot" type="button">+ Sección</button>
+  <button id="line-plus" type="button">+ Línea</button>
+  <button id="preview-button" class="hot" type="button">Preview</button>
+ </div>
+ <div class="quick-tools-row secondary-tools">
+  <button id="bar-minus" type="button">− Compás</button><button id="bar-plus" type="button">+ Compás</button>
+  <button id="repeat-minus" type="button">− x</button><button id="repeat-plus" type="button">+ x</button>
+  <button id="tools-toggle" type="button" aria-controls="advanced-tools" aria-expanded="false">Herramientas ▾</button>
+ </div>
+ <div class="quick-tools-row action-tools" aria-label="Copiar, pegar y repetición">
+  <button id="copy-bar" type="button" title="Copiar el compás seleccionado">Copy comp</button>
+  <button id="copy-section" type="button" title="Copiar la sección seleccionada">Copy sec</button>
+  <button id="paste-clipboard" class="paste-action" type="button" disabled title="Pegar en el destino seleccionado">Pegar</button>
+  <button id="chart-undo" class="undo-icon" type="button" aria-label="Deshacer" title="Deshacer"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M12 5 5 12l7 7M5 12h12c5 0 8 3 8 7s-3 7-8 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="repeat-start" class="score-symbol symbol-only" type="button" aria-label="Inicio de repetición" title="Inicio de repetición"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M6 4v20M11 4v20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="20" cy="10" r="2.4" fill="currentColor"/><circle cx="20" cy="18" r="2.4" fill="currentColor"/></svg></button>
+  <button id="repeat-end" class="score-symbol symbol-only" type="button" aria-label="Fin de repetición" title="Fin de repetición"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M17 4v20M22 4v20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="8" cy="10" r="2.4" fill="currentColor"/><circle cx="8" cy="18" r="2.4" fill="currentColor"/></svg></button>
+ </div>
+ <div id="advanced-tools" class="advanced-tools hide">
+  <div class="tool-rows">
+   <button id="section-minus" type="button">− Sección</button>
+   <button id="zoom-button" type="button">Ampliar lectura</button>
+   <button id="cancel-copy" class="hide" type="button">Cancelar copia</button>
+   <button id="chart-segno" class="score-symbol symbol-only" type="button" aria-label="Segno" title="Segno"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M21 6C15 1 7 3 7 9c0 6 14 5 14 11 0 6-9 8-15 3" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M5 24 23 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="7" cy="5" r="1.8" fill="currentColor"/><circle cx="21" cy="24" r="1.8" fill="currentColor"/></svg></button>
+   <button id="chart-coda" class="score-symbol symbol-only" type="button" aria-label="Coda" title="Coda"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="2.7"/><path d="M14 2v24M2 14h24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></button>
+   <button id="open-staff" class="score-staff" type="button">Partitura</button>
+   <button id="volta-one" type="button" class="volta-button">1.ª vuelta</button><button id="volta-two" type="button" class="volta-button">2.ª vuelta</button>
+   <button id="volta-clear" type="button" class="volta-clear">Quitar vuelta</button>
+  </div>
+ </div>
+ <div class="chart-hidden-state hide" aria-hidden="true">
+  <span id="chart-top-name"></span><span id="line-info"></span><span id="clipboard-status"></span>
+  <span id="selected-bar-label"></span><span id="chart-status"></span>
+  <button id="edit-first" type="button">Editar seleccionado</button>
+ </div>
+</div>
+<div id="paper-scroll" class="paper-scroll"><div id="page-scaler"><div id="paper" class="paper">
+ <div class="paper-header"><h2 id="paper-title"></h2><div id="paper-artist"></div><div id="paper-meter"></div></div>
+ <div id="paper-body"></div><div class="paper-footer">MIS CHARTS · A4</div>
+</div></div></div>
+<button id="preview-close" class="preview-close hide" type="button">‹ Editar</button>
+<div id="preview-controls" class="preview-controls hide">
+ <button id="preview-smaller" type="button">A−</button><button id="preview-auto" type="button" class="selected">Auto</button>
+ <button id="preview-larger" type="button">A+</button><button id="export-jpg-button" class="preview-export" type="button">↥ JPG</button>
+</div>
+<div id="jpg-sheet" class="jpg-sheet hide" role="dialog" aria-modal="true" aria-label="Exportación JPG">
+ <div class="jpg-box"><strong>Hoja en JPG</strong>
+  <p>Para guardarla en Fotos, mantén pulsada la imagen y elige «Guardar imagen» si aparece.</p>
+  <img id="jpg-preview-image" alt="Hoja A4 exportada como JPG">
+  <div><button id="jpg-download" type="button">Descargar JPG</button><button id="jpg-close" type="button">Cerrar</button></div>
+ </div>
+</div>
+</section>
+<section class="screen screen-light hide" id="editor-screen">
+  <header class="top editor-top"><button id="editor-back" class="back">‹</button><strong id="editor-title">Editar compás</strong><button id="editor-open-staff" class="editor-switch" type="button">♩ Partitura</button><button id="editor-done" class="done hot">Listo ✓</button></header>
+  <div class="editor-main"><div class="eyebrow">SELECCIONA EL PULSO</div><div id="beats"></div><div id="half-controls" class="half-controls hide"><button data-half="0">1.ª corchea</button><button data-half="1">2.ª corchea</button></div>
+  <div class="chord-panel"><div class="field-label">ACORDE EN EL PULSO <b id="beat-index">1</b></div><div class="entry-line"><input id="chord-preview" class="chord-preview" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Acorde" placeholder="Cmaj7#11"><button id="apply-chord" class="hot apply" type="button">Aplicar</button><button id="undo-chord" type="button" class="entry-action undo" title="Deshacer último cambio" aria-label="Deshacer">↶ <span>Deshacer</span></button><button id="erase-chord" type="button" class="entry-action erase" title="Borrar el acorde completo de este pulso" aria-label="Borrar acorde completo">✕ <span>Borrar</span></button></div><div id="chord-hint" class="hint">Pulsa las opciones para formar el acorde; Aplicar guarda en el pulso.</div></div>
+  <div class="palette"><div class="field-label">1 · NOTAS</div><div id="root-row" class="key-row notes-row"></div>
+  <div class="field-label">2 · ALTERACIONES / BAJO</div><div id="alter-row" class="key-row alter-row"></div>
+  <div class="field-label">3 · ACORDES COMUNES</div><div id="common-row" class="key-row common-row"></div>
+  <div class="field-label">4 · TENSIONES</div><div id="tension-row" class="key-row tension-row"></div>
+  <button id="expand-chords" class="expand" aria-expanded="false">Más tipos de acorde y modificadores ▾</button><div id="advanced" class="hide"><div class="field-label">OTROS ACORDES</div><div id="other-row" class="key-row many-row"></div><div class="field-label">NOTAS AÑADIDAS · OMISIONES</div><div id="extra-row" class="key-row many-row"></div></div>
+  <div class="editor-tools"><button id="subdivide">Subdividir negra</button><button id="kick">Kick: no</button></div>
+  <div class="editor-footer"><button id="previous-bar">← Anterior</button><button id="next-bar">Siguiente →</button></div>
+  </div>
+  </div>
+</section>
+<section class="screen screen-light hide" id="staff-screen">
+  <header class="top editor-top staff-head"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-chords" class="editor-switch" type="button">Acordes</button><button id="staff-done" class="done hot">Listo ✓</button></header>
+  <main class="staff-editor-main">
+    <div class="staff-tile"><div class="staff-topline"><b id="staff-meter">4/4</b><span>Cuatro áreas de pulso</span></div>
+    <div class="staff-scroll" id="staff-scroll" aria-label="Pentagrama desplazable horizontalmente"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" aria-label="Pentagrama editable grande y desplazable"></svg></div></div>
+    <div class="staff-palette-head">FIGURAS MUSICALES <span id="chosen-duration">Seleccionada: negra</span></div>
+    <div id="duration-palette" class="duration-palette">
+      <button type="button" class="duration-chip" data-duration="whole" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Redonda</span></button>
+      <button type="button" class="duration-chip" data-duration="half" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Blanca</span></button>
+      <button type="button" class="duration-chip active" data-duration="quarter" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Negra</span></button>
+      <button type="button" class="duration-chip" data-duration="eighth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Corchea</span></button>
+      <button type="button" class="duration-chip" data-duration="sixteenth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Semicorchea</span></button>
+    </div>
+    <div class="staff-palette-head staff-rest-heading">SILENCIOS</div>
+    <div id="rest-palette" class="duration-palette rest-palette">
+      <button type="button" class="duration-chip" data-rest="whole"><span class="duration-glyph" aria-hidden="true"></span><span>Redonda</span></button>
+      <button type="button" class="duration-chip" data-rest="half"><span class="duration-glyph" aria-hidden="true"></span><span>Blanca</span></button>
+      <button type="button" class="duration-chip" data-rest="quarter"><span class="duration-glyph" aria-hidden="true"></span><span>Negra</span></button>
+      <button type="button" class="duration-chip" data-rest="eighth"><span class="duration-glyph" aria-hidden="true"></span><span>Corchea</span></button>
+      <button type="button" class="duration-chip" data-rest="sixteenth"><span class="duration-glyph" aria-hidden="true"></span><span>Semicorchea</span></button>
+    </div>
+    <details class="staff-more-values">
+      <summary>Más figuras y silencios: fusas y semifusas</summary>
+      <div class="staff-palette-head">FIGURAS ADICIONALES</div>
+      <div class="duration-palette">
+        <button type="button" class="duration-chip" data-duration="thirtysecond" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Fusa</span></button>
+        <button type="button" class="duration-chip" data-duration="sixtyfourth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Semifusa</span></button>
+      </div>
+      <div class="staff-palette-head">SILENCIOS ADICIONALES</div>
+      <div class="duration-palette">
+        <button type="button" class="duration-chip" data-rest="thirtysecond"><span class="duration-glyph" aria-hidden="true"></span><span>Fusa</span></button>
+        <button type="button" class="duration-chip" data-rest="sixtyfourth"><span class="duration-glyph" aria-hidden="true"></span><span>Semifusa</span></button>
+      </div>
+    </details>
+    <div class="staff-dotted-row">
+      <button type="button" id="staff-dot" aria-pressed="false" title="Añadir o quitar puntillo de prolongación">• Puntillo</button>
+      <span>Desplaza la partitura con un dedo. Mantén una nota pulsada para moverla.</span>
+    </div>
+    <div class="staff-controls"><div class="staff-accidentals"><b>Alteración:</b><button data-acc="" class="active">♮</button><button data-acc="#">♯</button><button data-acc="b">♭</button></div>
+    <button id="staff-undo" class="quiet-action">↶ Deshacer nota</button><button id="staff-delete" class="quiet-action">Borrar nota</button></div>
+    <div class="staff-bottom-hint">Toca una nota para seleccionarla o mantenla pulsada para cambiarla de lugar. Usa «Borrar nota» para eliminar la seleccionada.</div>
+  </main>
+</section>
+</div><div id="toast" class="toast hide"></div>
+<script src="notation-v24.js?v=2.5.0"></script>
+<script src="app.js?v=2.5.0"></script>
+</body></html>
