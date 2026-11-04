@@ -70,6 +70,11 @@ function staffPositionX(note,index,span,left,beats){
  var d=staffNoteLength(note.duration||'quarter'),t=typeof note.time==='number'?note.time:index;
  return left+Math.max(0,Math.min(beats,t+d/2))/Math.max(1,beats)*span;
 }
+function barHasChords(b){
+ return !!(b&&b.pulses&&b.pulses.some(function(p){return p&&(p.chord||(p.split&&p.second));}));
+}
+function staffScoreSize(b){return barHasChords(b)?204:178;}
+function staffEffectiveLength(e){return MisNotation.length(e);}
 function rhythmCells(b){
  var cells=[],sounding=false,indices=[],end;
  for(var i=0;i<b.pulses.length;i++){
@@ -94,32 +99,9 @@ function rhythmCells(b){
 function widthForChord(txt,ctx){return Math.ceil(ctx.measureText(txt||'/').width)+8;}
 function rhythmCellWidth(c,ctx){if(!c.label)return c.half?7:10;return Math.max(c.half?18:22,widthForChord(c.label,ctx)+5);}
 function renderBarStaffPreview(b,width){
- // Notación amplia: nombres FUERA, encima del pentagrama; ritmo proporcional.
- var w=Math.max(85,width-6),height=146,notes=(b.notes||[]).slice();
- var beats=numBeats(),out=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+height+'" preserveAspectRatio="none" role="img" aria-label="Pentagrama del compás">'];
- for(var j=0;j<5;j++){var ly=51+j*16;out.push('<line x1="5" y1="'+ly+'" x2="'+(w-5)+'" y2="'+ly+'" stroke="#292b30" stroke-width="1.7"/>');}
- notes.sort(function(a,z){return (typeof a.time==='number'?a.time:0)-(typeof z.time==='number'?z.time:0);});
- for(var i=0;i<notes.length;i++){
-  var nt=notes[i],p=String(nt.pitch||'E4'),duration=nt.duration||'quarter';
-  var cy=115-(156-staffPitchY(p))*8/9;cy=Math.max(38,Math.min(138,cy));
-  var x=staffPositionX(nt,i,w-26,13,beats);x=Math.max(12,Math.min(w-12,x));
-  var time=typeof nt.time==='number'?nt.time:i,prev=i?(typeof notes[i-1].time==='number'?notes[i-1].time:i-1):-99;
-  var labelY=i&&Math.abs(time-prev)<.7&&i%2?40:23;
-  out.push('<text x="'+x.toFixed(1)+'" y="'+labelY+'" font-family="Arial,sans-serif" font-size="21" font-weight="900" fill="#c72a39" text-anchor="middle">'+esc(p.replace(/#/g,'♯').replace(/b/g,'♭'))+'</text>');
-  if(cy>=130)out.push('<line x1="'+(x-14).toFixed(1)+'" y1="131" x2="'+(x+14).toFixed(1)+'" y2="131" stroke="#292b30" stroke-width="1.6"/>');
-  var whole=duration==='whole',hollow=whole||duration==='half',up=cy>=83;
-  var stemX=x+(up?9:-9),stemEnd=cy+(up?-45:45);
-  out.push('<ellipse cx="'+x.toFixed(1)+'" cy="'+cy.toFixed(1)+'" rx="'+(whole?12:10)+'" ry="'+(whole?7:6.5)+'" transform="rotate(-17 '+x.toFixed(1)+' '+cy.toFixed(1)+')" fill="'+(hollow?'#fff':'#242528')+'" stroke="#242528" stroke-width="1.9"/>');
-  if(!whole){
-   out.push('<path d="M'+stemX.toFixed(1)+' '+cy.toFixed(1)+'V'+stemEnd.toFixed(1)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
-   if(duration==='eighth'||duration==='sixteenth'){
-    var dir=up?1:-1;
-    out.push('<path d="M'+stemX.toFixed(1)+' '+stemEnd.toFixed(1)+'q'+(18*dir)+' '+(9*dir)+' '+(10*dir)+' '+(27*dir)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
-    if(duration==='sixteenth')out.push('<path d="M'+stemX.toFixed(1)+' '+(stemEnd+(up?11:-11)).toFixed(1)+'q'+(16*dir)+' '+(9*dir)+' '+(10*dir)+' '+(24*dir)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
-   }
-  }
- }
- out.push('</svg>');return out.join('');
+ var options={width:Math.max(85,width-6),pulses:numBeats(),meter:chart.meter,hasChords:barHasChords(b)};
+ var engraving=MisNotation.renderSVG(b,options);
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+engraving.config.width+' '+engraving.config.height+'" preserveAspectRatio="none" role="img" aria-label="Pentagrama con agrupación rítmica correcta">'+engraving.markup+'</svg>';
 }
 function repeatBarline(which){
  var el=document.createElement('span');
@@ -142,7 +124,7 @@ function previewWidths(l,size,ctx){
  for(var b=0;b<l.bars.length;b++){
   var pk=rhythmCells(l.bars[b]),need=0;
   for(var i=0;i<pk.cells.length;i++)need+=rhythmCellWidth(pk.cells[i],ctx);
-  var w=l.bars[b].staff?Math.max(staffBarRequiredWidth(l.bars[b]),need+10):pk.empty?65:pk.solo?Math.max(76,widthForChord(pk.soloLabel,ctx)+17):Math.max(96,need+10);
+  var w=l.bars[b].staff?Math.max(staffBarRequiredWidth(l.bars[b]),need+10,barHasChords(l.bars[b])?160:0):pk.empty?65:pk.solo?Math.max(76,widthForChord(pk.soloLabel,ctx)+17):Math.max(96,need+10);
   list.push(w);sum+=w;
  }
  return {widths:list,total:sum};
@@ -161,8 +143,8 @@ function previewStats(size){
   }
   if(sums[0]>limit-6||sums[1]>limit-6)return null;
   var barH=Math.max(36,Math.ceil(size*1.38));
-  height+=Math.max(barH,staff[0]?146:0)+6+(volta[0]?30:0);
-  if(split)height+=Math.max(barH,staff[1]?146:0)+6+(volta[1]?30:0);
+  height+=Math.max(barH,staff[0]?204:0)+6+(volta[0]?30:0);
+  if(split)height+=Math.max(barH,staff[1]?204:0)+6+(volta[1]?30:0);
   lines++;
  }
  return {height:height,lines:lines};
@@ -211,10 +193,10 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      var beatNeed=0;
      for(var pi=0;pi<pack.cells.length;pi++)beatNeed+=rhythmCellWidth(pack.cells[pi],measure);
      // Compases con un solo acorde, centrados y con ancho compacto.
-     var width=l.bars[bi].staff?Math.max(staffBarRequiredWidth(l.bars[bi]),beatNeed+10):pack.empty?65:pack.solo?Math.max(76,widthForChord(pack.soloLabel,measure)+17):Math.max(96,beatNeed+10);
+     var width=l.bars[bi].staff?Math.max(staffBarRequiredWidth(l.bars[bi]),beatNeed+10,barHasChords(l.bars[bi])?160:0):pack.empty?65:pack.solo?Math.max(76,widthForChord(pack.soloLabel,measure)+17):Math.max(96,beatNeed+10);
      needs.push(width);total+=width;
     }
-    var labelWidth=previewMode?sectionLabelWidth(previewFont):84;
+    var labelWidth=sectionLabelWidth(previewMode?previewFont:Math.max(30,previewMaxFont()));
      var avail=686-labelWidth; // La etiqueta se ensancha cuando necesita el mismo tamaño de letra.
     var widths=[],rowHeight=36;
     var spare=Math.max(0,avail-total)/Math.max(1,needs.length);
@@ -237,11 +219,12 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      var hasVolta=false;
      for(var ei=gg.from;ei<gg.to;ei++){if(barVolta(l.bars[ei]))hasVolta=true;}
      var hasStaff=false;for(var z=gg.from;z<gg.to;z++)if(l.bars[z].staff)hasStaff=true;
-      var showBarH=Math.max(hasStaff?146:30,previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30);
+      var staffHeight=0;for(var sh=gg.from;sh<gg.to;sh++)if(l.bars[sh].staff)staffHeight=Math.max(staffHeight,staffScoreSize(l.bars[sh]));
+      var showBarH=Math.max(staffHeight,previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30);
       visualLine.style.height=(showBarH+6+(hasVolta?30:0))+'px';
       if(hasVolta)visualLine.style.paddingTop='30px';
      var label=document.createElement('div');label.className='section-label';
-     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';
+     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';label.style.fontSize=(previewMode?previewFont:Math.max(30,previewMaxFont()))+'px';
      label.textContent=(li===0&&gi===0)?sectionShort(s.name):'';
      if(label.textContent.length>=5)label.className+=' section-label-long';
      label.title='Seleccionar sección';
@@ -291,7 +274,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
        bt.appendChild(en);
       }
       for(var pp=0;pp<b.pulses.length;pp++)if(b.pulses[pp].kick){var kick=document.createElement('span');kick.className='bar-kick';bt.appendChild(kick);break;}
-      bt.onclick=function(){handleBarTap(si,li,bi);};bt.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();sec=si;line=li;bar=bi;openEditor();}else if(e.key===' '){e.preventDefault();sec=si;line=li;bar=bi;refreshSelectedBar();}};bs.appendChild(bt);
+      bt.onclick=function(){handleBarTap(si,li,bi);};bt.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();sec=si;line=li;bar=bi;if(currentBar().staff)openStaff();else openEditor();}else if(e.key===' '){e.preventDefault();sec=si;line=li;bar=bi;refreshSelectedBar();}};bs.appendChild(bt);
      })(bidx);
      visualLine.appendChild(bs);
      var rep=document.createElement('div');rep.className='repeat-label red-repeat';rep.textContent=gi===groups.length-1&&l.repeat>1?'×'+l.repeat:'';
@@ -426,7 +409,7 @@ var key=String(si)+'-'+String(li)+'-'+String(bi),now=Date.now();
  var twice=lastTapKey===key&&(now-lastTapTime)<tapWindow;
  lastTapTime=now;lastTapKey=key;
  sec=si;line=li;bar=bi;beat=half=0;
- if(twice){lastTapKey='';openEditor();}else{refreshSelectedBar();}
+ if(twice){lastTapKey='';if(currentBar().staff)openStaff();else openEditor();}else{refreshSelectedBar();}
 }
 function openEditor(){show('editor-screen');$('editor-title').textContent=currentSection().name+' · Compás '+(bar+1);undoStack=[];builder=parseChord(getSlot());renderEditor();}
 function getSlot(){var v=currentBeat();return half===1?v.second:v.chord;}
