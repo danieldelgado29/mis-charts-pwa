@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" manifest="offline-v20.manifest">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.4.1">
-<link rel="stylesheet" href="styles.css?v=2.4.1">
+<link rel="manifest" href="manifest.webmanifest?v=2.5.0">
+<link rel="stylesheet" href="styles.css?v=2.5.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -198,6 +198,32 @@
 #staff-screen .staff-more-values[open] summary{margin-bottom:12px}
 #staff-screen .staff-more-values .staff-palette-head{margin-top:10px}
 </style>
+<style id="mis-charts-v25-sharp">
+/* Evitar que la barra de herramientas comparta la capa escalada de la hoja. */
+#chart-screen{isolation:isolate}
+#chart-screen .chart-toolbar{
+ position:relative!important;z-index:8!important;flex-shrink:0!important;
+ background:#f4f4f7!important;
+ filter:none!important;-webkit-filter:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;-webkit-transform:none!important;
+ perspective:none!important;-webkit-perspective:none!important;
+ opacity:1!important;isolation:isolate;contain:paint;
+ text-rendering:geometricPrecision;
+}
+#chart-screen .chart-toolbar button,
+#chart-screen .chart-toolbar select,
+#chart-screen .chart-toolbar .quick-tools-row{
+ filter:none!important;-webkit-filter:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;-webkit-transform:none!important;
+ opacity:1!important;text-rendering:geometricPrecision;
+}
+#chart-screen .chart-toolbar button:disabled{opacity:.45!important}
+#chart-screen .chart-toolbar.toolbar-repaint{contain:layout paint;}
+/* Edición: la hoja se escala sola; los controles mantienen tamaño y bordes enteros. */
+#chart-screen #paper-scroll{position:relative;z-index:0}
+</style>
 </head>
 <body>
 <div id="app">
@@ -205,7 +231,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.4.1</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.5.0 · actualización de caché</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -335,6 +361,6 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="notation-v24.js?v=2.4.1"></script>
-<script src="app.js?v=2.4.1"></script>
+<script src="notation-v24.js?v=2.5.0"></script>
+<script src="app.js?v=2.5.0"></script>
 </body></html>
