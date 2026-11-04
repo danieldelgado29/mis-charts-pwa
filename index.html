@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.2.0">
-<link rel="stylesheet" href="styles.css?v=2.2.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.3.0">
+<link rel="stylesheet" href="styles.css?v=2.3.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -96,6 +96,35 @@
  #chart-screen .chart-toolbar .quick-tools-row.action-tools>button{font-size:10px;min-height:38px}
  #chart-screen .chart-toolbar .symbol-only svg,#chart-screen .chart-toolbar .undo-icon svg{width:27px;height:27px}
 }
+</style>
+<style id="mis-charts-v23-style">
+/* 2.3 — Secciones al MISMO tamaño que los acordes; se conserva el rojo. */
+#chart-screen .section-label,#chart-screen .section-label.section-label-long{
+ font-size:18px!important;font-weight:900!important;letter-spacing:-.5px!important;
+ line-height:1.06!important;color:#c92335!important;
+ overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;
+ display:flex;align-items:center;
+}
+#chart-screen.preview-mode .section-label,
+#chart-screen.preview-mode .section-label.section-label-long{
+ font-size:var(--show-chord-size,18px)!important;font-weight:900!important;
+ line-height:1.06!important;letter-spacing:-.8px!important;
+}
+#chart-screen:not(.preview-mode) .bar-item .chord-token{font-size:18px!important}
+/* Pellizco: un dedo desplaza la hoja, dos dedos cambian el zoom de la hoja. */
+#chart-screen #paper-scroll{
+ touch-action:pan-x pan-y;overscroll-behavior:contain;
+ overflow:auto!important;
+}
+#chart-screen.preview-mode #paper-scroll{
+ justify-content:flex-start!important;align-items:flex-start!important;
+ overflow:auto!important;
+}
+#chart-screen.preview-mode #page-scaler{
+ margin:auto!important;flex-shrink:0!important;max-width:none!important;
+}
+/* Pentagrama y notas: no interceptar los dos dedos en modo hoja. */
+#chart-screen .staff-in-bar svg{pointer-events:none}
 </style>
 </head>
 <body>
@@ -211,5 +240,5 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="app.js?v=2.2.0"></script>
+<script src="app.js?v=2.3.0"></script>
 </body></html>
