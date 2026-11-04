@@ -1,7 +1,8 @@
 CACHE MANIFEST
-# v2.4.1
+# Migración 2.5.0: nuevo HTML sin AppCache, actualización de clientes heredados.
 CACHE:
 index.html
+launch-v25.html
 styles.css
 app.js
 notation-v24.js
