@@ -1,10 +1,10 @@
 CACHE MANIFEST
-# Migración 2.7.0: nuevo HTML sin AppCache, actualización de clientes heredados.
+# Migración 2.8.0: nuevo HTML sin AppCache, actualización de clientes heredados.
 CACHE:
 index.html
-launch-v25.html
+launch-v28.html
 styles.css
-app.js
+app-v28.js
 notation-v24.js
 icons/icon180.png
 icons/icon192.png
