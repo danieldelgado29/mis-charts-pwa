@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# Migración 2.5.0: nuevo HTML sin AppCache, actualización de clientes heredados.
+# Migración 2.6.0: nuevo HTML sin AppCache, actualización de clientes heredados.
 CACHE:
 index.html
 launch-v25.html
