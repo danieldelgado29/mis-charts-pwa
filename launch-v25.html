@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.7.0">
-<link rel="stylesheet" href="styles.css?v=2.7.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.8.0">
+<link rel="stylesheet" href="styles.css?v=2.8.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -308,6 +308,41 @@
  align-items:center!important;
 }
 </style>
+<style id="mis-charts-v28-typography">
+/* Tamaño constante y compartido: acordes y secciones en edición.
+   Cada nombre de sección tiene exactamente tres letras. */
+#chart-screen:not(.preview-mode) .bar-item:not(.staff-bar) .chord-token,
+#chart-screen:not(.preview-mode) .bar-item .chord-flow.rhythm-flow .beat-chord{
+ font-size:46px!important;font-weight:900!important;
+ line-height:1.08!important;white-space:nowrap!important;
+ overflow:visible!important;max-width:none!important;
+}
+#chart-screen:not(.preview-mode) .section-label,
+#chart-screen:not(.preview-mode) .section-label.section-label-long{
+ font-size:46px!important;font-weight:900!important;
+ line-height:1.08!important;letter-spacing:-.6px!important;
+ white-space:nowrap!important;overflow:visible!important;
+ text-overflow:clip!important;align-self:stretch!important;
+ display:flex!important;align-items:center!important;
+}
+#chart-screen:not(.preview-mode) .line-wrapper{
+ margin-bottom:8px!important;
+}
+#chart-screen:not(.preview-mode) .chart-line{
+ min-height:76px;
+ overflow:visible!important;
+ align-items:center;
+}
+#chart-screen:not(.preview-mode) .bars-line{
+ align-items:center!important;
+}
+#chart-screen:not(.preview-mode) .bar-item:not(.staff-bar) .chord-flow.rhythm-flow{
+ overflow:visible!important;align-items:center!important;
+}
+#chart-screen:not(.preview-mode) .bar-item:not(.staff-bar) .chord-token.empty{
+ font-weight:550!important;color:#888!important;
+}
+</style>
 </head>
 <body>
 <div id="app">
@@ -315,7 +350,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.7.0 · actualización de caché</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.8.0 · letras grandes</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -445,6 +480,6 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="notation-v24.js?v=2.7.0"></script>
-<script src="app.js?v=2.7.0"></script>
+<script src="notation-v24.js?v=2.8.0"></script>
+<script src="app-v28.js?v=2.8.0"></script>
 </body></html>
