@@ -224,7 +224,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
       visualLine.style.height=(showBarH+6+(hasVolta?30:0))+'px';
       if(hasVolta)visualLine.style.paddingTop='30px';
      var label=document.createElement('div');label.className='section-label';
-     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';label.style.fontSize=(previewMode?previewFont:Math.max(30,previewMaxFont()))+'px';
+     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';label.style.setProperty('--live-section-font',(previewMode?previewFont:Math.max(30,previewMaxFont()))+'px');
      label.textContent=(li===0&&gi===0)?sectionShort(s.name):'';
      if(label.textContent.length>=5)label.className+=' section-label-long';
      label.title='Seleccionar sección';
