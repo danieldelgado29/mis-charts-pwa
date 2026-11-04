@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.3.0">
-<link rel="stylesheet" href="styles.css?v=2.3.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.4.0">
+<link rel="stylesheet" href="styles.css?v=2.4.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -133,7 +133,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.3</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.4</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -206,7 +206,7 @@
 </div>
 </section>
 <section class="screen screen-light hide" id="editor-screen">
-  <header class="top editor-top"><button id="editor-back" class="back">‹</button><strong id="editor-title">Editar compás</strong><button id="editor-done" class="done hot">Listo ✓</button></header>
+  <header class="top editor-top"><button id="editor-back" class="back">‹</button><strong id="editor-title">Editar compás</strong><button id="editor-open-staff" class="editor-switch" type="button">♩ Partitura</button><button id="editor-done" class="done hot">Listo ✓</button></header>
   <div class="editor-main"><div class="eyebrow">SELECCIONA EL PULSO</div><div id="beats"></div><div id="half-controls" class="half-controls hide"><button data-half="0">1.ª corchea</button><button data-half="1">2.ª corchea</button></div>
   <div class="chord-panel"><div class="field-label">ACORDE EN EL PULSO <b id="beat-index">1</b></div><div class="entry-line"><input id="chord-preview" class="chord-preview" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Acorde" placeholder="Cmaj7#11"><button id="apply-chord" class="hot apply" type="button">Aplicar</button><button id="undo-chord" type="button" class="entry-action undo" title="Deshacer último cambio" aria-label="Deshacer">↶ <span>Deshacer</span></button><button id="erase-chord" type="button" class="entry-action erase" title="Borrar el acorde completo de este pulso" aria-label="Borrar acorde completo">✕ <span>Borrar</span></button></div><div id="chord-hint" class="hint">Pulsa las opciones para formar el acorde; Aplicar guarda en el pulso.</div></div>
   <div class="palette"><div class="field-label">1 · NOTAS</div><div id="root-row" class="key-row notes-row"></div>
@@ -220,25 +220,36 @@
   </div>
 </section>
 <section class="screen screen-light hide" id="staff-screen">
-  <header class="top editor-top"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-done" class="done hot">Listo ✓</button></header>
+  <header class="top editor-top staff-head"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-chords" class="editor-switch" type="button">Acordes</button><button id="staff-done" class="done hot">Listo ✓</button></header>
   <main class="staff-editor-main">
-    <div class="staff-kicker">PENTAGRAMA DEL COMPÁS</div>
-    <p class="staff-intro">Arrastra una figura al pentagrama y suéltala en el pulso y altura deseados. También puedes elegir una figura y tocar directamente el pentagrama.</p>
     <div class="staff-tile"><div class="staff-topline"><b id="staff-meter">4/4</b><span>Cuatro áreas de pulso</span></div>
-    <div class="staff-scroll"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 228" aria-label="Pentagrama editable dividido por pulsos"></svg></div></div>
-    <div class="staff-palette-head">FIGURAS MUSICALES <span id="chosen-duration">Seleccionada: negra ♩</span></div>
+    <div class="staff-scroll" id="staff-scroll" aria-label="Pentagrama desplazable horizontalmente"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" aria-label="Pentagrama editable grande y desplazable"></svg></div></div>
+    <div class="staff-palette-head">FIGURAS MUSICALES <span id="chosen-duration">Seleccionada: negra</span></div>
     <div id="duration-palette" class="duration-palette">
-      <button type="button" class="duration-chip" data-duration="whole" draggable="true"><span class="duration-glyph">𝅝</span><span>Redonda</span></button>
-      <button type="button" class="duration-chip" data-duration="half" draggable="true"><span class="duration-glyph">𝅗𝅥</span><span>Blanca</span></button>
-      <button type="button" class="duration-chip active" data-duration="quarter" draggable="true"><span class="duration-glyph">♩</span><span>Negra</span></button>
-      <button type="button" class="duration-chip" data-duration="eighth" draggable="true"><span class="duration-glyph">♪</span><span>Corchea</span></button>
-      <button type="button" class="duration-chip" data-duration="sixteenth" draggable="true"><span class="duration-glyph">♬</span><span>Semicorchea</span></button>
+      <button type="button" class="duration-chip" data-duration="whole" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Redonda</span></button>
+      <button type="button" class="duration-chip" data-duration="half" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Blanca</span></button>
+      <button type="button" class="duration-chip active" data-duration="quarter" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Negra</span></button>
+      <button type="button" class="duration-chip" data-duration="eighth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Corchea</span></button>
+      <button type="button" class="duration-chip" data-duration="sixteenth" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Semicorchea</span></button>
+    </div>
+    <div class="staff-palette-head staff-rest-heading">SILENCIOS</div>
+    <div id="rest-palette" class="duration-palette rest-palette">
+      <button type="button" class="duration-chip" data-rest="whole"><span class="duration-glyph" aria-hidden="true"></span><span>Redonda</span></button>
+      <button type="button" class="duration-chip" data-rest="half"><span class="duration-glyph" aria-hidden="true"></span><span>Blanca</span></button>
+      <button type="button" class="duration-chip" data-rest="quarter"><span class="duration-glyph" aria-hidden="true"></span><span>Negra</span></button>
+      <button type="button" class="duration-chip" data-rest="eighth"><span class="duration-glyph" aria-hidden="true"></span><span>Corchea</span></button>
+      <button type="button" class="duration-chip" data-rest="sixteenth"><span class="duration-glyph" aria-hidden="true"></span><span>Semicorchea</span></button>
+    </div>
+    <div class="staff-dotted-row">
+      <button type="button" id="staff-dot" aria-pressed="false" title="Añadir o quitar puntillo de prolongación">• Puntillo</button>
+      <span>Desplaza la partitura con un dedo. Mantén una nota pulsada para moverla.</span>
     </div>
     <div class="staff-controls"><div class="staff-accidentals"><b>Alteración:</b><button data-acc="" class="active">♮</button><button data-acc="#">♯</button><button data-acc="b">♭</button></div>
-    <button id="staff-undo" class="quiet-action">↶ Deshacer nota</button><button id="staff-delete" class="quiet-action">Borrar última</button></div>
-    <div class="staff-bottom-hint">La posición horizontal determina el pulso; la vertical determina la nota. Toca una nota colocada para quitarla. Cada nota muestra su nombre.</div>
+    <button id="staff-undo" class="quiet-action">↶ Deshacer nota</button><button id="staff-delete" class="quiet-action">Borrar nota</button></div>
+    <div class="staff-bottom-hint">Toca una nota para seleccionarla o mantenla pulsada para cambiarla de lugar. Usa «Borrar nota» para eliminar la seleccionada.</div>
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="app.js?v=2.3.0"></script>
+<script src="notation-v24.js?v=2.4.0"></script>
+<script src="app.js?v=2.4.0"></script>
 </body></html>
