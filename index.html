@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.5.0">
-<link rel="stylesheet" href="styles.css?v=2.5.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.6.0">
+<link rel="stylesheet" href="styles.css?v=2.6.0">
 <title>Mis Charts · Editor musical</title>
 <style id="mis-charts-v21-style">
 #chart-screen:not(.hide):not(.preview-mode){display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -224,6 +224,64 @@
 /* Edición: la hoja se escala sola; los controles mantienen tamaño y bordes enteros. */
 #chart-screen #paper-scroll{position:relative;z-index:0}
 </style>
+
+<style id="mis-charts-v26-layout">
+/* El área táctil de edición ocupa su propia ventana y respeta el área segura
+   superior de los iPhone, evitando que la barra quede bajo el desenfoque nativo. */
+#chart-screen:not(.preview-mode):not(.hide){
+ position:fixed!important;inset:0!important;width:100%!important;
+ height:100dvh!important;min-height:0!important;
+ padding-top:max(16px,env(safe-area-inset-top,0px))!important;
+ overflow:hidden!important;background:#f2f2f5;
+}
+#chart-screen:not(.preview-mode) .chart-toolbar{
+ position:relative!important;top:auto!important;transform:none!important;
+ z-index:20!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ background:#f4f4f7!important;flex-shrink:0!important;
+}
+#chart-screen .chart-toolbar .quick-tools-row,
+#chart-screen .chart-toolbar .quick-tools-row>button,
+#chart-screen .chart-toolbar .quick-tools-row>select{
+ -webkit-filter:none!important;filter:none!important;
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ text-shadow:none!important;transform:none!important;
+}
+/* Compactar las barras negras y verdes al cuerpo real del pentagrama.
+   Los nombres de notas quedan por encima, sin prolongar las barras. */
+#chart-screen .bar-item.staff-row-bar{
+ border-left:none!important;border-right:none!important;
+ position:relative!important;overflow:visible!important;
+}
+#chart-screen .bar-item.staff-row-bar::before{
+ content:"";pointer-events:none;position:absolute;z-index:3;
+ left:0;top:var(--barline-top,52px);height:var(--barline-height,78px);
+ width:2px;background:#1c1c1c;
+}
+#chart-screen .bar-item.staff-row-bar:last-of-type::after{
+ content:"";pointer-events:none;position:absolute;z-index:3;
+ right:0;top:var(--barline-top,52px);height:var(--barline-height,78px);
+ width:2px;background:#1c1c1c;
+}
+#chart-screen .bar-item.staff-row-bar.repeat-at-start::before,
+#chart-screen .bar-item.staff-row-bar.after-repeat-end::before,
+#chart-screen .bar-item.staff-row-bar.repeat-at-end:last-of-type::after{display:none!important}
+#chart-screen .staff-row-bar .repeat-boundary{
+ top:var(--barline-top,52px)!important;
+ height:var(--barline-height,78px)!important;
+}
+#chart-screen .staff-row-bar:not(.staff-bar) .chord-flow{
+ transform:translateY(21px)!important;
+}
+#chart-screen .staff-row-bar .staff-in-bar{overflow:visible!important}
+#chart-screen .staff-row-bar .staff-in-bar svg{overflow:visible!important}
+/* Menos vacío encima y debajo del pentagrama. Se mantiene su anchura grande
+   para poder deslizar horizontalmente, sin reducir las figuras. */
+#staff-screen .staff-editor-main{padding-top:6px!important}
+#staff-screen .staff-tile{padding-top:5px!important;padding-bottom:5px!important}
+#staff-screen .staff-topline{margin-bottom:1px!important}
+#staff-screen .staff-scroll{margin-top:0!important;margin-bottom:0!important}
+</style>
+
 </head>
 <body>
 <div id="app">
@@ -231,7 +289,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.5.0 · actualización de caché</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.6.0 · actualización de caché</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -321,7 +379,7 @@
   <header class="top editor-top staff-head"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-chords" class="editor-switch" type="button">Acordes</button><button id="staff-done" class="done hot">Listo ✓</button></header>
   <main class="staff-editor-main">
     <div class="staff-tile"><div class="staff-topline"><b id="staff-meter">4/4</b><span>Cuatro áreas de pulso</span></div>
-    <div class="staff-scroll" id="staff-scroll" aria-label="Pentagrama desplazable horizontalmente"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" aria-label="Pentagrama editable grande y desplazable"></svg></div></div>
+    <div class="staff-scroll" id="staff-scroll" aria-label="Pentagrama desplazable horizontalmente"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 216" aria-label="Pentagrama editable grande y desplazable"></svg></div></div>
     <div class="staff-palette-head">FIGURAS MUSICALES <span id="chosen-duration">Seleccionada: negra</span></div>
     <div id="duration-palette" class="duration-palette">
       <button type="button" class="duration-chip" data-duration="whole" draggable="true"><span class="duration-glyph" aria-hidden="true"></span><span>Redonda</span></button>
@@ -361,6 +419,6 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="notation-v24.js?v=2.5.0"></script>
-<script src="app.js?v=2.5.0"></script>
+<script src="notation-v24.js?v=2.6.0"></script>
+<script src="app.js?v=2.6.0"></script>
 </body></html>
