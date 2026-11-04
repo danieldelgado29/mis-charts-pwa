@@ -185,10 +185,14 @@ function changePreview(delta){
  previewAuto=false;previewFont=next;renderChart();
 }
 function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
+ // Misma escala tipográfica para los acordes y las secciones en Edición.
+ // Preview conserva su sistema automático independiente.
+ var chordFont=previewMode?previewFont:Math.max(36,previewMaxFont());
+ if(!previewMode)$('paper').style.setProperty('--edit-chord-size',chordFont+'px');
  $('paper-title').textContent=chart.title;$('paper-artist').textContent=chart.artist||' ';$('paper-meter').textContent=chart.meter;
  $('line-info').textContent=currentSection().name+' · línea '+(line+1)+' · '+currentLine().bars.length+' compases · x'+currentLine().repeat;
  var body=$('paper-body');body.innerHTML='';
- var measure=document.createElement('canvas').getContext('2d');measure.font='800 '+(previewMode?previewFont:18)+'px Arial, sans-serif';
+ var measure=document.createElement('canvas').getContext('2d');measure.font='800 '+chordFont+'px Arial, sans-serif';
  for(var si=0;si<chart.sections.length;si++){
   var section=chart.sections[si];
   for(var li=0;li<section.lines.length;li++){
@@ -204,7 +208,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      var width=l.bars[bi].staff?Math.max(staffBarRequiredWidth(l.bars[bi]),beatNeed+10,barHasChords(l.bars[bi])?160:0):pack.empty?65:pack.solo?Math.max(76,widthForChord(pack.soloLabel,measure)+17):Math.max(96,beatNeed+10);
      needs.push(width);total+=width;
     }
-    var labelWidth=sectionLabelWidth(previewMode?previewFont:Math.max(30,previewMaxFont()));
+    var labelWidth=sectionLabelWidth(chordFont);
      var avail=686-labelWidth; // La etiqueta se ensancha cuando necesita el mismo tamaño de letra.
     var widths=[],rowHeight=36;
     var spare=Math.max(0,avail-total)/Math.max(1,needs.length);
@@ -228,7 +232,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      for(var ei=gg.from;ei<gg.to;ei++){if(barVolta(l.bars[ei]))hasVolta=true;}
      var hasStaff=false;for(var z=gg.from;z<gg.to;z++)if(l.bars[z].staff)hasStaff=true;
       var staffHeight=0;for(var sh=gg.from;sh<gg.to;sh++)if(l.bars[sh].staff)staffHeight=Math.max(staffHeight,staffScoreSize(l.bars[sh]));
-      var showBarH=Math.max(staffHeight,previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30);
+      var showBarH=Math.max(staffHeight,Math.max(36,Math.ceil(chordFont*1.38)));
       // Límites verticales del compás musical: sólo la altura del pentagrama,
       // no el espacio reservado encima para nombres y plicas.
       var lineTop=hasStaff?Math.round(showBarH*.36):0;
@@ -236,7 +240,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
       visualLine.style.height=(showBarH+6+(hasVolta?30:0))+'px';
       if(hasVolta)visualLine.style.paddingTop='30px';
      var label=document.createElement('div');label.className='section-label';
-     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';label.style.setProperty('--live-section-font',(previewMode?previewFont:Math.max(30,previewMaxFont()))+'px');
+     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';label.style.setProperty('--live-section-font',chordFont+'px');
      label.textContent=(li===0&&gi===0)?sectionShort(s.name):'';
      if(label.textContent.length>=5)label.className+=' section-label-long';
      label.title='Seleccionar sección';
@@ -271,7 +275,7 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
          var c=pack.cells[ci],tok=document.createElement('span');
          tok.className='chord-token beat-chord'+(c.label==='/'?' empty':'');
          tok.textContent=c.label||'\u00A0';
-         tok.style.display='flex';tok.style.fontSize=(previewMode?previewFont:18)+'px';
+         tok.style.display='flex';tok.style.fontSize=chordFont+'px';
          tok.style.flex=String(rhythmCellWidth(c,measure))+' '+String(rhythmCellWidth(c,measure))+' 0';
          flow.appendChild(tok);
         }
@@ -832,6 +836,6 @@ $('volta-clear').onclick=function(){setVolta(0);};
 $('import-button').onclick=function(){$('import-file').click();};$('import-file').onchange=function(e){var f=this.files&&this.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(){saveImportText(reader.result);};reader.readAsText(f);this.value='';};window.addEventListener('resize',function(){if(chart&&$('chart-screen').className.indexOf('hide')===-1)fitPaper();});
 }
 function ensureData(){for(var c=0;c<charts.length;c++){var ob=charts[c];if(!ob.sections)ob.sections=[];for(var s=0;s<ob.sections.length;s++){var section=ob.sections[s];if(!section.lines)section.lines=[];for(var l=0;l<section.lines.length;l++){var ln=section.lines[l];if(!ln.bars)ln.bars=[];if(!ln.repeat)ln.repeat=1;for(var b=0;b<ln.bars.length;b++){var br=ln.bars[b];if(!br.pulses)br.pulses=[];if(!br.notes)br.notes=[];if(br.volta===undefined)br.volta=0;for(var p=0;p<br.pulses.length;p++){if(br.pulses[p].second===undefined)br.pulses[p].second='';}}}}}}
-function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v25.js?v=2.6.0').catch(function(){});});}}
+function start(){safeRead();ensureData();initKeyboard();wire();show('home-screen');if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-v25.js?v=2.7.0').catch(function(){});});}}
 start();
 })();
