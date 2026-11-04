@@ -50,6 +50,25 @@ function sectionShort(name){
  var m={intro:'In',verso:'Vers',precoro:'Pre',coro:'Coro',puente:'Puen',solo:'Solo',interludio:'Inter',instrumental:'Instru',outro:'Out',final:'Fin'};
  return m[k]||String(name||'').substr(0,5);
 }
+function sectionLabelWidth(size){
+ if(!chart)return 84;
+ var ctx=document.createElement('canvas').getContext('2d'),v=84;
+ ctx.font='900 '+size+'px Arial,sans-serif';
+ for(var i=0;i<chart.sections.length;i++)v=Math.max(v,Math.ceil(ctx.measureText(sectionShort(chart.sections[i].name)).width)+14);
+ return v;
+}
+function staffBarRequiredWidth(b){
+ var n=numBeats(),a=(b&&b.notes)||[],min=1;
+ for(var i=0;i<a.length;i++)for(var j=i+1;j<a.length;j++){
+  var t=typeof a[i].time==='number'?a[i].time:i,z=typeof a[j].time==='number'?a[j].time:j,d=Math.abs(t-z);
+  if(d>.001)min=Math.min(min,d);
+ }
+ return Math.max(156,Math.min(520,Math.ceil(30*n/min)));
+}
+function staffPositionX(note,index,span,left,beats){
+ var d=staffNoteLength(note.duration||'quarter'),t=typeof note.time==='number'?note.time:index;
+ return left+Math.max(0,Math.min(beats,t+d/2))/Math.max(1,beats)*span;
+}
 function rhythmCells(b){
  var cells=[],sounding=false,indices=[],end;
  for(var i=0;i<b.pulses.length;i++){
@@ -74,29 +93,30 @@ function rhythmCells(b){
 function widthForChord(txt,ctx){return Math.ceil(ctx.measureText(txt||'/').width)+8;}
 function rhythmCellWidth(c,ctx){if(!c.label)return c.half?7:10;return Math.max(c.half?18:22,widthForChord(c.label,ctx)+5);}
 function renderBarStaffPreview(b,width){
- // Cinco líneas más separadas; el pentagrama ocupa la misma altura que la barra del compás.
- var w=Math.max(85,width-6),h=84,notes=b.notes||[];
- var out=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" role="img" aria-label="Pentagrama dentro del compás">'];
- // Clave implícita: sol. Líneas F5, D5, B4, G4, E4.
- for(var y=10;y<=66;y+=14)out.push('<line x1="5" y1="'+y+'" x2="'+(w-5)+'" y2="'+y+'" stroke="#2b2c31" stroke-width="1.35"/>');
+ // Notación amplia: nombres FUERA, encima del pentagrama; ritmo proporcional.
+ var w=Math.max(85,width-6),height=146,notes=(b.notes||[]).slice();
+ var beats=numBeats(),out=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+height+'" preserveAspectRatio="none" role="img" aria-label="Pentagrama del compás">'];
+ for(var j=0;j<5;j++){var ly=51+j*16;out.push('<line x1="5" y1="'+ly+'" x2="'+(w-5)+'" y2="'+ly+'" stroke="#292b30" stroke-width="1.7"/>');}
+ notes.sort(function(a,z){return (typeof a.time==='number'?a.time:0)-(typeof z.time==='number'?z.time:0);});
  for(var i=0;i<notes.length;i++){
-  var nt=notes[i],pitch=String(nt.pitch||'E4');
-  var cy=66-(156-staffPitchY(pitch))*7/9;
-  var t=typeof nt.time==='number'?nt.time:Math.min(i,numBeats()-1),x=10+(t+.25)/numBeats()*(w-20);
-  x=Math.max(10,Math.min(w-10,x));
-  cy=Math.max(7,Math.min(80,cy));
-  var whole=nt.duration==='whole',hollow=whole||nt.duration==='half';
-  // La nota C4 necesita una línea adicional debajo del pentagrama.
-  if(cy>=78)out.push('<line x1="'+(x-12).toFixed(1)+'" y1="80" x2="'+(x+12).toFixed(1)+'" y2="80" stroke="#2b2c31" stroke-width="1.25"/>');
-  out.push('<ellipse cx="'+x.toFixed(1)+'" cy="'+cy.toFixed(1)+'" rx="5.4" ry="3.8" fill="'+(hollow?'white':'#25262a')+'" stroke="#25262a" stroke-width="1.35"/>');
-  if(!whole)out.push('<path d="M'+(x+4.8).toFixed(1)+' '+cy.toFixed(1)+'v-19" stroke="#25262a" stroke-width="1.6" fill="none"/>');
-  var dur=nt.duration||'quarter';
-  if(dur==='eighth'||dur==='sixteenth'){
-   out.push('<path d="M'+(x+4.8).toFixed(1)+' '+(cy-19).toFixed(1)+'q15 9 6 18" stroke="#25262a" stroke-width="1.55" fill="none"/>');
-   if(dur==='sixteenth')out.push('<path d="M'+(x+4.8).toFixed(1)+' '+(cy-12).toFixed(1)+'q14 9 6 17" stroke="#25262a" stroke-width="1.55" fill="none"/>');
+  var nt=notes[i],p=String(nt.pitch||'E4'),duration=nt.duration||'quarter';
+  var cy=115-(156-staffPitchY(p))*8/9;cy=Math.max(38,Math.min(138,cy));
+  var x=staffPositionX(nt,i,w-26,13,beats);x=Math.max(12,Math.min(w-12,x));
+  var time=typeof nt.time==='number'?nt.time:i,prev=i?(typeof notes[i-1].time==='number'?notes[i-1].time:i-1):-99;
+  var labelY=i&&Math.abs(time-prev)<.7&&i%2?40:23;
+  out.push('<text x="'+x.toFixed(1)+'" y="'+labelY+'" font-family="Arial,sans-serif" font-size="21" font-weight="900" fill="#c72a39" text-anchor="middle">'+esc(p.replace(/#/g,'♯').replace(/b/g,'♭'))+'</text>');
+  if(cy>=130)out.push('<line x1="'+(x-14).toFixed(1)+'" y1="131" x2="'+(x+14).toFixed(1)+'" y2="131" stroke="#292b30" stroke-width="1.6"/>');
+  var whole=duration==='whole',hollow=whole||duration==='half',up=cy>=83;
+  var stemX=x+(up?9:-9),stemEnd=cy+(up?-45:45);
+  out.push('<ellipse cx="'+x.toFixed(1)+'" cy="'+cy.toFixed(1)+'" rx="'+(whole?12:10)+'" ry="'+(whole?7:6.5)+'" transform="rotate(-17 '+x.toFixed(1)+' '+cy.toFixed(1)+')" fill="'+(hollow?'#fff':'#242528')+'" stroke="#242528" stroke-width="1.9"/>');
+  if(!whole){
+   out.push('<path d="M'+stemX.toFixed(1)+' '+cy.toFixed(1)+'V'+stemEnd.toFixed(1)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
+   if(duration==='eighth'||duration==='sixteenth'){
+    var dir=up?1:-1;
+    out.push('<path d="M'+stemX.toFixed(1)+' '+stemEnd.toFixed(1)+'q'+(18*dir)+' '+(9*dir)+' '+(10*dir)+' '+(27*dir)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
+    if(duration==='sixteenth')out.push('<path d="M'+stemX.toFixed(1)+' '+(stemEnd+(up?11:-11)).toFixed(1)+'q'+(16*dir)+' '+(9*dir)+' '+(10*dir)+' '+(24*dir)+'" stroke="#242528" stroke-width="2.4" fill="none"/>');
+   }
   }
-  var yy=cy<20?Math.min(83,cy+17):Math.max(9,cy-12);
-  out.push('<text x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" fill="#ce2936" font-family="Arial" font-size="9" font-weight="800" text-anchor="middle">'+esc(pitch)+'</text>');
  }
  out.push('</svg>');return out.join('');
 }
@@ -121,13 +141,13 @@ function previewWidths(l,size,ctx){
  for(var b=0;b<l.bars.length;b++){
   var pk=rhythmCells(l.bars[b]),need=0;
   for(var i=0;i<pk.cells.length;i++)need+=rhythmCellWidth(pk.cells[i],ctx);
-  var w=l.bars[b].staff?Math.max(132,need+10):pk.empty?65:pk.solo?Math.max(76,widthForChord(pk.soloLabel,ctx)+17):Math.max(96,need+10);
+  var w=l.bars[b].staff?Math.max(staffBarRequiredWidth(l.bars[b]),need+10):pk.empty?65:pk.solo?Math.max(76,widthForChord(pk.soloLabel,ctx)+17):Math.max(96,need+10);
   list.push(w);sum+=w;
  }
  return {widths:list,total:sum};
 }
 function previewStats(size){
- var ctx=document.createElement('canvas').getContext('2d'),height=0,lines=0,limit=602;
+ var ctx=document.createElement('canvas').getContext('2d'),height=0,lines=0,limit=686-sectionLabelWidth(size);
  for(var si=0;si<chart.sections.length;si++)for(var li=0;li<chart.sections[si].lines.length;li++){
   var l=chart.sections[si].lines[li],base=previewWidths(l,18,ctx),trial=previewWidths(l,size,ctx);
   var split=base.total>limit&&l.bars.length>2,mid=split?Math.ceil(l.bars.length/2):l.bars.length;
@@ -140,8 +160,8 @@ function previewStats(size){
   }
   if(sums[0]>limit-6||sums[1]>limit-6)return null;
   var barH=Math.max(36,Math.ceil(size*1.38));
-  height+=Math.max(barH,staff[0]?84:0)+6+(volta[0]?30:0);
-  if(split)height+=Math.max(barH,staff[1]?84:0)+6+(volta[1]?30:0);
+  height+=Math.max(barH,staff[0]?146:0)+6+(volta[0]?30:0);
+  if(split)height+=Math.max(barH,staff[1]?146:0)+6+(volta[1]?30:0);
   lines++;
  }
  return {height:height,lines:lines};
@@ -164,7 +184,7 @@ function layoutPreview(){
  $('preview-smaller').disabled=previewFont<=18;
  $('preview-larger').disabled=previewFont>=max;
  $('paper').style.setProperty('--show-chord-size',previewFont+'px');
- $('paper').style.setProperty('--show-section-size',Math.min(18,Math.max(13,previewFont*.32))+'px');
+ $('paper').style.setProperty('--show-section-size',previewFont+'px');
  $('paper').style.setProperty('--show-title-size',Math.min(48,Math.max(30,previewFont*.75))+'px');
 }
 function changePreview(delta){
@@ -190,10 +210,11 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      var beatNeed=0;
      for(var pi=0;pi<pack.cells.length;pi++)beatNeed+=rhythmCellWidth(pack.cells[pi],measure);
      // Compases con un solo acorde, centrados y con ancho compacto.
-     var width=l.bars[bi].staff?Math.max(132,beatNeed+10):pack.empty?65:pack.solo?Math.max(76,widthForChord(pack.soloLabel,measure)+17):Math.max(96,beatNeed+10);
+     var width=l.bars[bi].staff?Math.max(staffBarRequiredWidth(l.bars[bi]),beatNeed+10):pack.empty?65:pack.solo?Math.max(76,widthForChord(pack.soloLabel,measure)+17):Math.max(96,beatNeed+10);
      needs.push(width);total+=width;
     }
-    var avail=602; // Mismo margen de la hoja A4 estable v1.3.
+    var labelWidth=previewMode?sectionLabelWidth(previewFont):84;
+     var avail=686-labelWidth; // La etiqueta se ensancha cuando necesita el mismo tamaño de letra.
     var widths=[],rowHeight=36;
     var spare=Math.max(0,avail-total)/Math.max(1,needs.length);
     for(var k=0;k<needs.length;k++)widths.push(needs[k]+spare);
@@ -215,10 +236,11 @@ function renderChart(){if(!chart)return;if(previewMode)layoutPreview();
      var hasVolta=false;
      for(var ei=gg.from;ei<gg.to;ei++){if(barVolta(l.bars[ei]))hasVolta=true;}
      var hasStaff=false;for(var z=gg.from;z<gg.to;z++)if(l.bars[z].staff)hasStaff=true;
-      var showBarH=Math.max(hasStaff?84:30,previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30);
+      var showBarH=Math.max(hasStaff?146:30,previewMode?Math.max(36,Math.ceil(previewFont*1.38)):30);
       visualLine.style.height=(showBarH+6+(hasVolta?30:0))+'px';
       if(hasVolta)visualLine.style.paddingTop='30px';
      var label=document.createElement('div');label.className='section-label';
+     label.style.width=labelWidth+'px';label.style.flex='0 0 '+labelWidth+'px';
      label.textContent=(li===0&&gi===0)?sectionShort(s.name):'';
      if(label.textContent.length>=5)label.className+=' section-label-long';
      label.title='Seleccionar sección';
