@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" manifest="offline-v20.manifest">
+<html lang="es" manifest="offline-v21.manifest">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
@@ -10,8 +10,8 @@
 <meta name="description" content="Charts musicales offline con editor por botones">
 <link rel="apple-touch-icon" href="icons/icon180.png">
 <link rel="icon" href="icons/icon192.png">
-<link rel="manifest" href="manifest.webmanifest?v=2.0.0">
-<link rel="stylesheet" href="styles.css?v=2.0.0">
+<link rel="manifest" href="manifest.webmanifest?v=2.1.0">
+<link rel="stylesheet" href="styles.css?v=2.1.0">
 <title>Mis Charts · Editor musical</title>
 </head>
 <body>
@@ -20,7 +20,7 @@
   <div class="home-main"><div class="logo">𝄞</div><div class="eyebrow">TU REPERTORIO. TU MÚSICA.</div><h1>MIS <span>CHARTS</span></h1><p>Charts claros, en una hoja.</p>
     <button class="big-button hot" id="new-button">＋ <span>NUEVO</span></button>
     <button class="big-button" id="open-button">▤ <span>ABRIR</span></button>
-  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.0</small></div>
+  </div><div class="home-foot">BOTONES · A4 · GUARDADO EN ESTE DISPOSITIVO <small>v2.1</small></div>
 </section>
 <section class="screen screen-dark hide" id="new-screen">
   <header class="top dark-top"><button id="new-back" class="back">‹</button><strong>Nuevo chart</strong><span></span></header>
@@ -36,33 +36,56 @@
   <input type="file" id="import-file" accept=".json,application/json" class="hide">
 </section>
 <section class="screen screen-light hide" id="chart-screen">
-<header class="top chart-top"><button id="chart-back" class="back">‹</button><strong id="chart-top-name">Mis Charts</strong><div class="top-actions"><button id="preview-button" class="preview-trigger" type="button" aria-label="Ver hoja A4 completa">Preview</button><button id="export-button" title="Exportar respaldo">↥</button><button id="print-button" title="Imprimir A4">▣</button></div></header>
-  <div class="chart-toolbar"><span class="version-tag">PWA v2.0 · LECTURA AMPLIADA</span><div class="line-controls"><select id="section-kind"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select><button id="section-plus" class="hot">+ Sección</button><button id="section-minus">− Sección</button><button id="line-plus">+ Línea</button></div>
-  <div class="line-controls"><button id="bar-minus">− Compás</button><button id="bar-plus">+ Compás</button><button id="repeat-minus">− x</button><button id="repeat-plus">+ x</button><button id="zoom-button">Ampliar lectura</button></div>
-  <div class="line-controls"><button id="copy-bar">Copiar compás</button><button id="copy-section">Copiar sección</button><button id="paste-clipboard" class="paste-action" type="button" disabled>Pegar</button><button id="cancel-copy" class="hide" type="button">Cancelar copia</button><span id="line-info" class="line-info"></span><span id="clipboard-status" class="clipboard-status" role="status" aria-live="polite">Selecciona el origen y pulsa Copiar</span></div>
-    <div class="score-actions">
-      <div class="selected-label"><span class="selection-led"></span><b id="selected-bar-label">Intro · Compás 1</b><small>Un toque: seleccionar · Doble toque: acordes</small></div>
-      <div class="score-action-row">
-        <button id="chart-undo" title="Deshacer acción en la hoja" class="quiet-action">↶ Deshacer</button>
-        <button id="repeat-start" class="score-symbol" title="Repetición de inicio">𝄆 Inicio</button>
-        <button id="repeat-end" class="score-symbol" title="Repetición de fin">𝄇 Fin</button>
-        <button id="chart-segno" class="score-symbol">𝄋 Segno</button>
-        <button id="chart-coda" class="score-symbol">𝄌 Coda</button>
-        <button id="open-staff" class="score-staff">𝄞 Partitura</button>
-      </div>
-      <div class="score-action-row endings-outside" aria-label="Casillas de primera y segunda vuelta">
-        <span class="volta-toolbar-label">CASILLAS DE REPETICIÓN</span>
-        <button id="volta-one" type="button" class="volta-button" title="Dibujar primera vuelta encima del compás seleccionado">1.ª vuelta</button>
-        <button id="volta-two" type="button" class="volta-button" title="Dibujar segunda vuelta encima del compás seleccionado">2.ª vuelta</button>
-        <button id="volta-clear" type="button" class="volta-clear" title="Quitar casilla del compás">Quitar</button>
-      </div>
-    </div>
+<div class="chart-toolbar">
+ <div class="quick-tools-row primary-tools">
+  <button id="chart-back" class="back" type="button" aria-label="Volver a mis charts">‹</button>
+  <select id="section-kind" aria-label="Tipo de sección"><option>Intro</option><option>Verso</option><option>Pre-coro</option><option>Coro</option><option>Puente</option><option>Solo</option><option>Interludio</option><option>Instrumental</option><option>Outro</option><option>Final</option></select>
+  <button id="section-plus" class="hot" type="button">+ Sección</button>
+  <button id="line-plus" type="button">+ Línea</button>
+  <button id="preview-button" class="hot" type="button">Preview</button>
+ </div>
+ <div class="quick-tools-row secondary-tools">
+  <button id="bar-minus" type="button">− Compás</button><button id="bar-plus" type="button">+ Compás</button>
+  <button id="repeat-minus" type="button">− x</button><button id="repeat-plus" type="button">+ x</button>
+  <button id="tools-toggle" type="button" aria-controls="advanced-tools" aria-expanded="false">Herramientas ▾</button>
+ </div>
+ <div id="advanced-tools" class="advanced-tools hide">
+  <div class="tool-rows">
+   <button id="section-minus" type="button">− Sección</button>
+   <button id="zoom-button" type="button">Ampliar lectura</button>
+   <button id="copy-bar" type="button">Copiar compás</button><button id="copy-section" type="button">Copiar sección</button>
+   <button id="paste-clipboard" class="paste-action" type="button" disabled>Pegar</button>
+   <button id="cancel-copy" class="hide" type="button">Cancelar copia</button>
+   <button id="export-button" type="button">Respaldo JSON</button>
+   <button id="chart-undo" type="button">↶ Deshacer</button>
+   <button id="repeat-start" type="button" class="score-symbol">𝄆 Inicio</button><button id="repeat-end" type="button" class="score-symbol">𝄇 Fin</button>
+   <button id="chart-segno" class="score-symbol" type="button">𝄋 Segno</button><button id="chart-coda" class="score-symbol" type="button">𝄌 Coda</button>
+   <button id="open-staff" class="score-staff" type="button">Partitura</button>
+   <button id="volta-one" type="button" class="volta-button">1.ª vuelta</button><button id="volta-two" type="button" class="volta-button">2.ª vuelta</button>
+   <button id="volta-clear" type="button" class="volta-clear">Quitar vuelta</button>
   </div>
-  <div id="paper-scroll" class="paper-scroll"><div id="page-scaler"><div id="paper" class="paper"><div class="paper-header"><h2 id="paper-title"></h2><div id="paper-artist"></div><div id="paper-meter"></div></div><div id="paper-body"></div><div class="paper-footer">MIS CHARTS · A4</div></div></div></div>
-  <div class="chart-bottom"><span id="chart-status">Toca para seleccionar · Doble toque para editar</span><button id="edit-first" class="hot">Editar seleccionado</button></div>
-  <button id="preview-close" class="preview-close hide" type="button" aria-label="Regresar al editor">‹ Editar</button>
-<div id="preview-controls" class="preview-controls hide" aria-label="Tamaño de lectura">
-<button id="preview-smaller" type="button" aria-label="Disminuir letra">A−</button><button id="preview-auto" type="button" class="selected">Auto</button><button id="preview-larger" type="button" aria-label="Aumentar letra">A+</button>
+ </div>
+ <div class="chart-hidden-state hide" aria-hidden="true">
+  <span id="chart-top-name"></span><span id="line-info"></span><span id="clipboard-status"></span>
+  <span id="selected-bar-label"></span><span id="chart-status"></span>
+  <button id="edit-first" type="button">Editar seleccionado</button>
+ </div>
+</div>
+<div id="paper-scroll" class="paper-scroll"><div id="page-scaler"><div id="paper" class="paper">
+ <div class="paper-header"><h2 id="paper-title"></h2><div id="paper-artist"></div><div id="paper-meter"></div></div>
+ <div id="paper-body"></div><div class="paper-footer">MIS CHARTS · A4</div>
+</div></div></div>
+<button id="preview-close" class="preview-close hide" type="button">‹ Editar</button>
+<div id="preview-controls" class="preview-controls hide">
+ <button id="preview-smaller" type="button">A−</button><button id="preview-auto" type="button" class="selected">Auto</button>
+ <button id="preview-larger" type="button">A+</button><button id="export-jpg-button" class="preview-export" type="button">↥ JPG</button>
+</div>
+<div id="jpg-sheet" class="jpg-sheet hide" role="dialog" aria-modal="true" aria-label="Exportación JPG">
+ <div class="jpg-box"><strong>Hoja en JPG</strong>
+  <p>Para guardarla en Fotos, mantén pulsada la imagen y elige «Guardar imagen» si aparece.</p>
+  <img id="jpg-preview-image" alt="Hoja A4 exportada como JPG">
+  <div><button id="jpg-download" type="button">Descargar JPG</button><button id="jpg-close" type="button">Cerrar</button></div>
+ </div>
 </div>
 </section>
 <section class="screen screen-light hide" id="editor-screen">
@@ -82,7 +105,7 @@
 <section class="screen screen-light hide" id="staff-screen">
   <header class="top editor-top"><button id="staff-back" class="back" title="Regresar a la hoja">‹</button><strong id="staff-title">Partitura · Compás 1</strong><button id="staff-done" class="done hot">Listo ✓</button></header>
   <main class="staff-editor-main">
-    <div class="staff-kicker">CLAVE DE SOL · PENTAGRAMA DEL COMPÁS</div>
+    <div class="staff-kicker">PENTAGRAMA DEL COMPÁS</div>
     <p class="staff-intro">Arrastra una figura al pentagrama y suéltala en el pulso y altura deseados. También puedes elegir una figura y tocar directamente el pentagrama.</p>
     <div class="staff-tile"><div class="staff-topline"><b id="staff-meter">4/4</b><span>Cuatro áreas de pulso</span></div>
     <div class="staff-scroll"><svg id="staff-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 228" aria-label="Pentagrama editable dividido por pulsos"></svg></div></div>
@@ -100,5 +123,5 @@
   </main>
 </section>
 </div><div id="toast" class="toast hide"></div>
-<script src="app.js?v=2.0.0"></script>
+<script src="app.js?v=2.1.0"></script>
 </body></html>
