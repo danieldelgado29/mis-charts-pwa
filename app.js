@@ -4,6 +4,7 @@
 var KEY='mis-charts-buttons-v1.7', charts=[], chart=null, sec=0, line=0, bar=0, beat=0, half=0, zoom=false, previewMode=false, previewPreviousZoom=false, previewFont=18, previewAuto=true, previewGap=1;
 var mode='', clipboard=null, builder=null, undoStack=[], noteDuration='♩', noteAcc='', toastTimer=null, lastPreview='';
 var chartHistory=[],staffHistory=[],chosenDuration='quarter',chosenAcc='',dragDuration='',lastTapTime=0,lastTapKey='',tapWindow=430;
+var editPinchZoom=1,previewPinchZoom=1,pinchGesture=null,pinchTapBlockUntil=0;
 var TYPES=['m','Maj7','7','m7b5','m7','sus2','sus4','dim7','aug7','alt'];
 var TENSIONS=['b5','#5','b9','9','#9','11','#11','b13','13','#13'];
 var OTHERS=['Maj','mMaj7','6','m6','6/9','m6/9','maj9','m9','9','m11','11','maj13','m13','13','dim','aug','aug7','7sus4','7sus2','m7add11','7alt','power5'];
@@ -40,7 +41,7 @@ function currentLine(){return currentSection().lines[line];}
 function currentBar(){return currentLine().bars[bar];}
 function currentBeat(){var b=currentBar(); while(b.pulses.length<numBeats())b.pulses.push(defaultBeat());return b.pulses[beat];}
 function renderLibrary(){var node=$('library-list');node.innerHTML='';if(!charts.length){node.innerHTML='<p class="quiet">Todavía no hay charts. Pulsa Nuevo para empezar.</p>';return;}for(var i=charts.length-1;i>=0;i--){(function(c){var row=document.createElement('div');row.className='library-row';row.innerHTML='<button class="library-item"><span>'+esc(c.title)+'</span><small>'+esc(c.artist)+' · '+esc(c.meter)+' · '+c.sections.length+' secciones</small></button><button class="library-delete">Eliminar</button>';row.querySelector('.library-item').onclick=function(){chart=c;sec=line=bar=beat=half=0;mode='';openChart();};row.querySelector('.library-delete').onclick=function(){if(confirm('¿Eliminar este chart guardado? Esta acción no se puede deshacer.')){charts.splice(charts.indexOf(c),1);save();renderLibrary();}};node.appendChild(row);})(charts[i]);}}
-function openChart(){chartHistory=[];lastTapKey='';clipboard=null;mode='';previewMode=false;$('chart-screen').className='screen screen-light';$('preview-close').className='preview-close hide';show('chart-screen');$('chart-top-name').textContent=chart.title;renderChart();}
+function openChart(){chartHistory=[];lastTapKey='';clipboard=null;mode='';editPinchZoom=1;previewPinchZoom=1;pinchGesture=null;previewMode=false;$('chart-screen').className='screen screen-light';$('preview-close').className='preview-close hide';show('chart-screen');$('chart-top-name').textContent=chart.title;renderChart();}
 function totalRows(){var n=0;for(var i=0;i<chart.sections.length;i++)n+=chart.sections[i].lines.length;return n;}
 // Presentación musical: una posición por negra, o dos por negra subdividida.
 // Un pulso vacío después de un acorde se indica con «/»; nunca estiramos
@@ -307,11 +308,11 @@ function setPreviewMode(enabled){
  if(!chart)return;
  previewMode=!!enabled;
  if(previewMode){
-  previewPreviousZoom=zoom;zoom=false;previewAuto=true;
+  previewPreviousZoom=zoom;zoom=false;previewAuto=true;pinchGesture=null;previewPinchZoom=1;
   $('chart-screen').className='screen screen-light preview-mode';
   $('preview-close').className='preview-close';$('preview-controls').className='preview-controls';
  }else{
-  zoom=previewPreviousZoom;
+  zoom=previewPreviousZoom;pinchGesture=null;
   $('chart-screen').className='screen screen-light';
   $('preview-close').className='preview-close hide';$('preview-controls').className='preview-controls hide';
   $('paper').style.removeProperty('--show-chord-size');
@@ -321,18 +322,52 @@ function setPreviewMode(enabled){
  renderChart();
 }
 function fitPaper(){
- var sc=$('paper-scroll'),w=sc.clientWidth-16,factor;
+ var sc=$('paper-scroll'),w=sc.clientWidth-16,base;
  if(previewMode){
-  // La hoja se ajusta completa al ancho y alto disponibles.
-  var vw=window.innerWidth||document.documentElement.clientWidth;
-  var vh=window.innerHeight||document.documentElement.clientHeight;
-  factor=Math.min(1,Math.max(0.1,(vw-24)/780),Math.max(0.1,(vh-90)/1103));
- }else{factor=zoom?1:Math.min(1,w/780);}
+  var vw=window.innerWidth||document.documentElement.clientWidth,vh=window.innerHeight||document.documentElement.clientHeight;
+  base=Math.min(1,Math.max(.1,(vw-24)/780),Math.max(.1,(vh-90)/1103));
+ }else{base=zoom?1:Math.min(1,w/780);}
+ var factor=base*(previewMode?previewPinchZoom:editPinchZoom);
+ if(!isFinite(factor)||factor<=0)factor=base;
  var stage=$('page-scaler');
  stage.style.width=(780*factor)+'px';stage.style.height=(1103*factor)+'px';
- $('paper').style.webkitTransform='scale('+factor+')';
- $('paper').style.transform='scale('+factor+')';
+ $('paper').style.webkitTransform='scale('+factor+')';$('paper').style.transform='scale('+factor+')';
  sc.className='paper-scroll'+(!previewMode&&zoom?' zoomed':'');
+ return factor;
+}
+function pinchDistance(a,b){var dx=b.clientX-a.clientX,dy=b.clientY-a.clientY;return Math.sqrt(dx*dx+dy*dy);}
+function pinchCenter(a,b){return{x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2};}
+function setupSheetPinchZoom(){
+ var sc=$('paper-scroll');
+ sc.addEventListener('touchstart',function(e){
+  if(!chart||e.touches.length!==2)return;
+  var a=e.touches[0],b=e.touches[1],mid=pinchCenter(a,b);
+  var factor=fitPaper(),box=$('page-scaler').getBoundingClientRect();
+  pinchGesture={distance:Math.max(1,pinchDistance(a,b)),zoom:previewMode?previewPinchZoom:editPinchZoom,mode:previewMode,
+   anchorX:(mid.x-box.left)/factor,anchorY:(mid.y-box.top)/factor};
+  pinchTapBlockUntil=Date.now()+650;
+  if(e.cancelable)e.preventDefault();
+ },{passive:false});
+ sc.addEventListener('touchmove',function(e){
+  if(!pinchGesture||e.touches.length<2||previewMode!==pinchGesture.mode)return;
+  if(e.cancelable)e.preventDefault();
+  var a=e.touches[0],b=e.touches[1],mid=pinchCenter(a,b);
+  var next=pinchGesture.zoom*pinchDistance(a,b)/pinchGesture.distance;
+  // Margen técnico contra tamaños infinitos: zoom de lectura muy amplio.
+  next=Math.max(.025,Math.min(64,next));
+  if(previewMode)previewPinchZoom=next;else editPinchZoom=next;
+  var factor=fitPaper(),box=$('page-scaler').getBoundingClientRect();
+  sc.scrollLeft+=box.left+pinchGesture.anchorX*factor-mid.x;
+  sc.scrollTop+=box.top+pinchGesture.anchorY*factor-mid.y;
+  pinchTapBlockUntil=Date.now()+500;
+ },{passive:false});
+ function finish(e){if(pinchGesture&&(!e.touches||e.touches.length<2)){pinchGesture=null;pinchTapBlockUntil=Date.now()+500;}}
+ sc.addEventListener('touchend',finish,{passive:true});
+ sc.addEventListener('touchcancel',finish,{passive:true});
+ // Safari antiguo puede enviar eventos gesture además de touch.
+ sc.addEventListener('gesturestart',function(e){if(e.cancelable)e.preventDefault();},{passive:false});
+ sc.addEventListener('gesturechange',function(e){if(e.cancelable)e.preventDefault();},{passive:false});
+ sc.addEventListener('gestureend',function(e){if(e.cancelable)e.preventDefault();},{passive:false});
 }
 function handleSectionTap(si,li){sec=si;line=li;bar=0;lastTapKey='';renderChart();}
 function updateClipboardUI(){
@@ -386,6 +421,7 @@ function refreshSelectedBar(){
  renderSelectedBarControls();
 }
 function handleBarTap(si,li,bi){
+if(Date.now()<pinchTapBlockUntil)return;
 var key=String(si)+'-'+String(li)+'-'+String(bi),now=Date.now();
  var twice=lastTapKey===key&&(now-lastTapTime)<tapWindow;
  lastTapTime=now;lastTapKey=key;
@@ -709,7 +745,7 @@ $('volta-two').onclick=function(){setVolta(2);};
 $('volta-clear').onclick=function(){setVolta(0);};
  $('open-staff').onclick=openStaff;
  $('staff-back').onclick=$('staff-done').onclick=function(){save();show('chart-screen');renderChart();};
- wireStaff();
+ wireStaff();setupSheetPinchZoom();
 $('import-button').onclick=function(){$('import-file').click();};$('import-file').onchange=function(e){var f=this.files&&this.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(){saveImportText(reader.result);};reader.readAsText(f);this.value='';};window.addEventListener('resize',function(){if(chart&&$('chart-screen').className.indexOf('hide')===-1)fitPaper();});
 }
 function ensureData(){for(var c=0;c<charts.length;c++){var ob=charts[c];if(!ob.sections)ob.sections=[];for(var s=0;s<ob.sections.length;s++){var section=ob.sections[s];if(!section.lines)section.lines=[];for(var l=0;l<section.lines.length;l++){var ln=section.lines[l];if(!ln.bars)ln.bars=[];if(!ln.repeat)ln.repeat=1;for(var b=0;b<ln.bars.length;b++){var br=ln.bars[b];if(!br.pulses)br.pulses=[];if(!br.notes)br.notes=[];if(br.volta===undefined)br.volta=0;for(var p=0;p<br.pulses.length;p++){if(br.pulses[p].second===undefined)br.pulses[p].second='';}}}}}}
