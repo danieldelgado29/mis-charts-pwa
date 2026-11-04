@@ -613,7 +613,7 @@ function staffTimeForX(x,duration){
  var n=staffBeatCount(),bw=784/n;
  var raw=(x-62)/bw;
  var step=staffDurationStep(duration);
- var time=Math.round((raw-0.18)/step)*step;
+ var time=Math.round((raw-staffNoteLength(duration)/2)/step)*step;
  var max=n-staffNoteLength(duration);
  if(max<0)return -1;
  return Math.max(0,Math.min(max,time));
@@ -656,22 +656,25 @@ function renderFullStaff(){
  s.push('<line x1="846" y1="84" x2="846" y2="156" stroke="#111" stroke-width="2"/>');
 
 for(var j=0;j<notes.length;j++){
-  var nt=notes[j],p=nt.pitch||'E4',t=typeof nt.time==='number'?nt.time:Math.min(j,n-1),dur=nt.duration||'quarter';
-  var cx=62+(t+0.25)*w,cy=staffPitchY(p);
-  if(cx>845)cx=842;if(cy<45)cy=45;if(cy>177)cy=177;
+  var nt=notes[j],p=nt.pitch||'E4',t=typeof nt.time==='number'?nt.time:j,dur=nt.duration||'quarter';
+  var cx=staffPositionX(nt,j,784,62,n),cy=staffPitchY(p);
+  cx=Math.max(75,Math.min(834,cx));cy=Math.max(55,Math.min(184,cy));
   var hollow=dur==='half'||dur==='whole',whole=dur==='whole';
   var label=p.replace(/#/g,'♯').replace(/b/g,'♭');
+  var prev=j?notes[j-1]:null,pt=prev?(typeof prev.time==='number'?prev.time:j-1):-100;
+  var labelY=j&&Math.abs(t-pt)<.7&&j%2?62:35;
+  var up=cy>=120,stemX=cx+(up?11:-11),stemEnd=cy+(up?-56:56);
   s.push('<g class="staff-note-hit" data-note="'+j+'" aria-label="Quitar '+staffEsc(p)+'">');
-  s.push('<rect data-note="'+j+'" x="'+(cx-17)+'" y="'+(cy-28)+'" width="40" height="57" fill="transparent"/>');
-  s.push('<text data-note="'+j+'" x="'+cx+'" y="'+(cy-19)+'" text-anchor="middle" font-size="13" font-family="Arial" font-weight="700" fill="#bd303c">'+staffEsc(label)+'</text>');
-  if(cy>160){for(var ledger=174;ledger<=cy+1;ledger+=18)s.push('<line x1="'+(cx-15)+'" y1="'+ledger+'" x2="'+(cx+16)+'" y2="'+ledger+'" stroke="#252528" stroke-width="1.5"/>');}
-  s.push('<ellipse data-note="'+j+'" cx="'+cx+'" cy="'+cy+'" rx="'+(whole?11:9)+'" ry="6" transform="rotate(-20 '+cx+' '+cy+')" fill="'+(hollow?'#fff':'#242428')+'" stroke="#242428" stroke-width="2"/>');
+  s.push('<rect data-note="'+j+'" x="'+(cx-23)+'" y="20" width="50" height="180" fill="transparent"/>');
+  s.push('<text data-note="'+j+'" x="'+cx.toFixed(1)+'" y="'+labelY+'" text-anchor="middle" font-size="24" font-family="Arial" font-weight="900" fill="#bd303c">'+staffEsc(label)+'</text>');
+  if(cy>160)for(var ledger=174;ledger<=cy+2;ledger+=18)s.push('<line x1="'+(cx-17)+'" y1="'+ledger+'" x2="'+(cx+18)+'" y2="'+ledger+'" stroke="#252528" stroke-width="1.8"/>');
+  s.push('<ellipse data-note="'+j+'" cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" rx="'+(whole?14:12)+'" ry="'+(whole?8.5:8)+'" transform="rotate(-18 '+cx.toFixed(1)+' '+cy.toFixed(1)+')" fill="'+(hollow?'#fff':'#242428')+'" stroke="#242428" stroke-width="2.6"/>');
   if(!whole){
-   var sx=cx+8,sy=cy-1;
-   s.push('<path data-note="'+j+'" d="M'+sx+' '+sy+' L'+sx+' '+(cy-44)+'" stroke="#242428" stroke-width="2" fill="none"/>');
+   s.push('<path data-note="'+j+'" d="M'+stemX.toFixed(1)+' '+cy.toFixed(1)+'V'+stemEnd.toFixed(1)+'" stroke="#242428" stroke-width="3" fill="none"/>');
    if(dur==='eighth'||dur==='sixteenth'){
-    s.push('<path data-note="'+j+'" d="M'+sx+' '+(cy-44)+' C'+(sx+22)+' '+(cy-33)+' '+(sx+8)+' '+(cy-23)+' '+(sx+9)+' '+(cy-15)+'" stroke="#242428" stroke-width="3" fill="none"/>');
-    if(dur==='sixteenth')s.push('<path data-note="'+j+'" d="M'+sx+' '+(cy-31)+' C'+(sx+20)+' '+(cy-24)+' '+(sx+7)+' '+(cy-15)+' '+(sx+9)+' '+(cy-10)+'" stroke="#242428" stroke-width="3" fill="none"/>');
+    var dir=up?1:-1;
+    s.push('<path data-note="'+j+'" d="M'+stemX.toFixed(1)+' '+stemEnd.toFixed(1)+'q'+(26*dir)+' '+(15*dir)+' '+(16*dir)+' '+(35*dir)+'" stroke="#242428" stroke-width="3.2" fill="none"/>');
+    if(dur==='sixteenth')s.push('<path data-note="'+j+'" d="M'+stemX.toFixed(1)+' '+(stemEnd+(up?14:-14)).toFixed(1)+'q'+(23*dir)+' '+(15*dir)+' '+(16*dir)+' '+(32*dir)+'" stroke="#242428" stroke-width="3.2" fill="none"/>');
    }
   }
   s.push('</g>');
