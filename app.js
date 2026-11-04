@@ -396,7 +396,7 @@ function renderSelectedBarControls(){
  $('selected-bar-label').textContent=s.name+' · Línea '+(line+1)+' · Compás '+(bar+1);
  var keys=[['repeat-start','repeatStart'],['repeat-end','repeatEnd'],['chart-segno','segno'],['chart-coda','coda']];
  for(var i=0;i<keys.length;i++){
-  var el=$(keys[i][0]);el.className=(keys[i][0]==='repeat-start'||keys[i][0]==='repeat-end'||keys[i][0]==='chart-segno'||keys[i][0]==='chart-coda'?'score-symbol':'')+(b[keys[i][1]]?' active':'');
+  var el=$(keys[i][0]);el.className='score-symbol symbol-only'+(b[keys[i][1]]?' active':'');
  }
  // Vuelta 1 y 2 son marcas de notación, no campos de texto.
  var v=barVolta(b);
