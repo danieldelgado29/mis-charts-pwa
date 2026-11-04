@@ -143,7 +143,7 @@ function renderSVG(bar,options){
    }
    if(nt.dotted)lines.push('<circle cx="'+fmt(x+c.rx+8)+'" cy="'+fmt(y-3)+'" r="'+(c.editor?4:3.1)+'" fill="#242528"/>');
   }
-  if(c.editor)lines.push('<rect data-note="'+it.index+'" x="'+fmt(x-22)+'" y="'+fmt(c.top-60)+'" width="44" height="'+fmt(4*c.space+95)+'" fill="transparent"/>');
+  if(c.editor)lines.push('<rect data-note="'+it.index+'" x="'+fmt(x-15)+'" y="'+fmt(y-20)+'" width="30" height="40" fill="transparent"/>');
   lines.push('</g>');
  }
  // Barras de unión agrupadas por pulso, con segunda barra para semicorcheas.
@@ -170,9 +170,33 @@ function renderSVG(bar,options){
  return{markup:lines.join(''),config:c,groups:z.beams};
 }
 function figureIcon(kind,duration){
- var bar={notes:[{kind:kind,duration:duration,time:0,pitch:'B4'}]},raw=renderSVG(bar,{editor:false,width:85,pulses:1,meter:'1/4'});
- // Los iconos comparten el mismo motor de cabezas, plicas y silencios.
- return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85 178" aria-hidden="true" focusable="false">'+raw.markup+'</svg>';
+ // Glifos musicales dibujados en SVG, sin depender de fuentes con caracteres ausentes.
+ var p=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 70" aria-hidden="true" focusable="false">'];
+ if(kind==='rest'){
+  if(duration==='whole'||duration==='half'){
+   p.push('<path d="M9 33H51" stroke="currentColor" stroke-width="2.5"/>');
+   p.push(duration==='whole'?'<rect x="21" y="33" width="18" height="9" fill="currentColor"/>':'<rect x="21" y="24" width="18" height="9" fill="currentColor"/>');
+  }else if(duration==='quarter'){
+   p.push('<path d="M32 11L23 27L35 37L24 51L32 58L20 49L29 37L17 27L28 11Z" fill="currentColor"/>');
+  }else{
+   p.push('<path d="M39 14L27 59" stroke="currentColor" stroke-width="3.5" fill="none"/>');
+   for(var y=0;y<(duration==='sixteenth'?2:1);y++){
+    p.push('<circle cx="20" cy="'+(20+y*16)+'" r="5.5" fill="currentColor"/>');
+    p.push('<path d="M21 '+(24+y*16)+'Q31 '+(32+y*16)+' 37 '+(21+y*16)+'" stroke="currentColor" stroke-width="3.2" fill="none"/>');
+   }
+  }
+ }else{
+  var whole=duration==='whole',half=duration==='half',fill=whole||half?'white':'currentColor';
+  p.push('<ellipse cx="20" cy="48" rx="'+(whole?14:11)+'" ry="'+(whole?7:7.4)+'" transform="rotate(-18 20 48)" fill="'+fill+'" stroke="currentColor" stroke-width="3"/>');
+  if(!whole){
+   p.push('<path d="M30 47V10" stroke="currentColor" stroke-width="3.2" fill="none"/>');
+   if(duration==='eighth'||duration==='sixteenth'){
+    p.push('<path d="M30 10Q51 21 38 41" stroke="currentColor" stroke-width="3.4" fill="none"/>');
+    if(duration==='sixteenth')p.push('<path d="M30 21Q51 33 38 51" stroke="currentColor" stroke-width="3.4" fill="none"/>');
+   }
+  }
+ }
+ p.push('</svg>');return p.join('');
 }
 global.MisNotation={cfg:cfg,items:items,clusters:clusters,notesLayout:notesLayout,renderSVG:renderSVG,figureIcon:figureIcon,length:length,pitchY:pitchY,pointX:pointX};
 })(window);
