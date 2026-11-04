@@ -1,7 +1,7 @@
 /* Mis Charts 2.5 — PWA sin AppCache antiguo. */
 'use strict';
-var CACHE='mis-charts-runtime-v2.7.0';
-var FILES=['./launch-v25.html?v=2.7.0','./index.html?v=2.7.0','./styles.css?v=2.7.0','./app.js?v=2.7.0','./notation-v24.js?v=2.7.0','./manifest.webmanifest?v=2.7.0','./icons/icon180.png','./icons/icon192.png','./icons/icon512.png'];
+var CACHE='mis-charts-runtime-v2.8.0';
+var FILES=['./launch-v28.html?v=2.8.0','./index.html?v=2.8.0','./styles.css?v=2.8.0','./app-v28.js?v=2.8.0','./notation-v24.js?v=2.8.0','./manifest.webmanifest?v=2.8.0','./icons/icon180.png','./icons/icon192.png','./icons/icon512.png'];
 self.addEventListener('install',function(event){
  event.waitUntil(caches.open(CACHE).then(function(cache){
   return Promise.all(FILES.map(function(url){return cache.add(url).catch(function(){return null;});}));
@@ -26,7 +26,7 @@ self.addEventListener('fetch',function(event){
  }).catch(function(){
   return caches.match(request).then(function(saved){
    if(saved)return saved;
-   if(request.mode==='navigate')return caches.match('./launch-v25.html?v=2.7.0');
+   if(request.mode==='navigate')return caches.match('./launch-v28.html?v=2.8.0');
    return Response.error();
   });
  }));
